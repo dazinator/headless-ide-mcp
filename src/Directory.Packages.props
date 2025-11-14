@@ -1,0 +1,45 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageVersionOverrideEnabled>false</CentralPackageVersionOverrideEnabled>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.SourceLink.AzureRepos.Git" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.0" />
+
+    <!--Tests-->   
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+    <PackageVersion Include="Shouldly" Version="4.3.0" />
+    <PackageVersion Include="NSubstitute" Version="5.3.0" />
+    <PackageVersion Include="Bogus" Version="35.6.3" />
+    <PackageVersion Include="Testcontainers" Version="4.7.0" />
+
+    <!--xunit-->
+  
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.4" />
+
+    <!--xunit v2-->
+    <PackageVersion Include="xunit" Version="2.9.3" />
+  
+    <PackageVersion Include="Verify.Xunit" Version="30.17.0" />
+    <PackageVersion Include="MartinCostello.Logging.XUnit" Version="0.3.0" />      
+    <PackageVersion Include="MELT.Xunit" Version="1.1.0-preview.1" />
+    <!--see https://github.com/brendanconnolly/Xunit.Categories/pull/46-->
+    <PackageVersion Include="xunit.categories" Version="3.0.1" />
+    <!--xunit v3-->
+    <PackageVersion Include="xunit.v3" Version="3.0.1" />
+    <PackageVersion Include="Verify.XunitV3" Version="31.0.0-beta.1" />
+    <PackageVersion Include="MartinCostello.Logging.XUnit.v3" Version="0.6.0" />
+    <PackageVersion Include="MELT.Xunit.v3" Version="1.1.0-preview.1" />
+
+
+  </ItemGroup>
+</Project>

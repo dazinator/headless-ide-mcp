@@ -1,0 +1,71 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>Preview</LangVersion>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <IsXUnitV2>false</IsXUnitV2>
+    <!--
+    To enable the Microsoft Testing Platform 'dotnet test' experience, add property:
+      <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+
+    To enable the Microsoft Testing Platform native command line experience, add property:
+      <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+
+    For more information on Microsoft Testing Platform support in xUnit.net, please visit:
+      https://xunit.net/docs/getting-started/v3/microsoft-testing-platform
+    -->
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+  </ItemGroup>
+
+  <ItemGroup Label="XUnit Any">
+    <Using Include="Xunit" />
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+    <!--<PackageReference Include="xunit.runner.visualstudio" />-->
+  </ItemGroup>
+
+  <ItemGroup Label="xunit v2" Condition="'$(IsXUnitV2)' == 'true'">
+    <PackageReference Include="xunit" />
+    <Using Include="Xunit.Abstractions" />
+    <PackageReference Include="Verify.Xunit" />
+    <PackageReference Include="xunit.categories" />
+    <Using Include="Xunit.Categories" />
+    <!--Remove the catergory attributes which are only for v3 in lieue of waiting for xunit.categories to support v3-->
+    <Compile Remove="Attributes\*.cs" />
+    <None Include="Attributes\*.cs" />
+    <PackageReference Include="MartinCostello.Logging.XUnit" />
+    <PackageReference Include="MELT.Xunit" />
+    <Using Include="MELT" />
+  </ItemGroup>
+
+  <ItemGroup Label="xunit v3" Condition="'$(IsXUnitV2)' == 'false'">
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="Verify.XunitV3" />
+    <!--Waiting on https://github.com/brendanconnolly/Xunit.Categories/pull/46
+    <PackageReference Include="xunit.categories"/>-->
+    <Using Include="Tests.Attributes" />
+    <PackageReference Include="MartinCostello.Logging.XUnit.v3" />
+    <Using Include="MELT" />
+    <PackageReference Include="MELT.Xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="NSubstitute" />
+    <PackageReference Include="Testcontainers" />
+    <PackageReference Include="coverlet.collector">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>
