@@ -14,7 +14,10 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.0" />
 
-    <!--Tests-->   
+    <!--MCP Server-->
+    <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="0.4.0-preview.3" />
+
+    <!--Tests-->
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="Shouldly" Version="4.3.0" />

@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  headless-ide-mcp:
+    image: headless-ide-mcp:dev
+    container_name: headless-ide-mcp-server
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:8080"
+      - "5001:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=8081
+      - CODE_BASE_PATH=/workspace
+    volumes:
+      # Mount the sample codebase into the container
+      - ./sample-codebase:/workspace:ro
+    networks:
+      - mcp-network
+
+networks:
+  mcp-network:
+    driver: bridge

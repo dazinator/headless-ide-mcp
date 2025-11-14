@@ -1,0 +1,71 @@
+### Health Check
+GET http://localhost:5000/health
+Accept: application/json
+
+###
+
+### List MCP Tools
+POST http://localhost:5000/
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/list"
+}
+
+###
+
+### Call CheckFileExists Tool - Existing File
+POST http://localhost:5000/
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/call",
+  "params": {
+    "name": "check_file_exists",
+    "arguments": {
+      "fileName": "SampleProject1/Calculator.cs"
+    }
+  }
+}
+
+###
+
+### Call CheckFileExists Tool - Non-existing File
+POST http://localhost:5000/
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "tools/call",
+  "params": {
+    "name": "check_file_exists",
+    "arguments": {
+      "fileName": "NonExistent.cs"
+    }
+  }
+}
+
+###
+
+### Call CheckFileExists Tool - Solution File
+POST http://localhost:5000/
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "method": "tools/call",
+  "params": {
+    "name": "check_file_exists",
+    "arguments": {
+      "fileName": "SampleCodeBase.sln"
+    }
+  }
+}
+
+###
