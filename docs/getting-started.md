@@ -73,7 +73,7 @@ headless-ide-mcp/
 
 ### Using the .http File
 
-A `test-mcp-server.http` file is provided in the root directory. You can use it with:
+A `.http/test-mcp-server.http` file is provided in the root directory. You can use it with:
 - Visual Studio 2022's built-in HTTP client
 - Visual Studio Code with the REST Client extension
 - JetBrains Rider

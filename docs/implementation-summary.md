@@ -25,7 +25,7 @@ Created comprehensive documentation in `/docs`:
 - **build-notes.md**: Build and deployment considerations
 
 ### 4. HTTP Test File ✅
-- **test-mcp-server.http**: Example requests for testing the MCP server
+- **.http/test-mcp-server.http**: Example requests for testing the MCP server
 - Includes health check, tools/list, and tool invocation examples
 - Compatible with VS2022, VSCode (REST Client), and Rider
 
@@ -85,7 +85,7 @@ headless-ide-mcp/
 ├── Dockerfile                       # Container definition
 ├── docker-compose.yml               # Docker Compose config
 ├── docker-compose.dcproj            # VS2022 Docker project
-└── test-mcp-server.http             # HTTP test file
+└── .http/test-mcp-server.http             # HTTP test file
 ```
 
 ## Key Technologies

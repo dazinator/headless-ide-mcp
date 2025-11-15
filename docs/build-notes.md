@@ -23,7 +23,7 @@ When running in Docker:
 
 ## Testing the Server
 
-Use the provided `test-mcp-server.http` file with:
+Use the provided `.http/test-mcp-server.http` file with:
 - Visual Studio 2022 (built-in HTTP client)
 - Visual Studio Code (with REST Client extension)
 - JetBrains Rider

@@ -1,0 +1,47 @@
+# Build artifacts
+**/bin/
+**/obj/
+**/out/
+
+# IDE files
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userprefs
+
+# Test results
+TestResults/
+*.trx
+*.coverage
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+
+# Documentation build
+docs/_site/
+site/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docker
+**/.dockerignore
+**/docker-compose*
+**/Dockerfile*
+
+# CI/CD
+.github/
+azure-pipelines.yml
+appveyor.yml
+
+# Misc
+*.md
+!src/**/*.md
+LICENSE*
+.editorconfig

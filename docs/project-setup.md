@@ -248,7 +248,7 @@ To add a new MCP tool:
    }
    ```
 
-5. **Add HTTP request examples to test-mcp-server.http:**
+5. **Add HTTP request examples to .http/test-mcp-server.http:**
    ```http
    ### Call DoSomethingTool
    POST http://localhost:5000/

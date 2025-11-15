@@ -1,0 +1,163 @@
+### Health Check
+GET http://localhost:5000/health
+Accept: application/json
+
+###
+
+### List MCP Tools
+POST http://localhost:5000/
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/list"
+}
+
+###
+
+### Call CheckFileExists Tool - Existing File
+POST http://localhost:5000/
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/call",
+  "params": {
+    "name": "check_file_exists",
+    "arguments": {
+      "fileName": "SampleProject1/Calculator.cs"
+    }
+  }
+}
+
+###
+
+### Call CheckFileExists Tool - Non-existing File
+POST http://localhost:5000/
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "tools/call",
+  "params": {
+    "name": "check_file_exists",
+    "arguments": {
+      "fileName": "NonExistent.cs"
+    }
+  }
+}
+
+###
+
+### Call CheckFileExists Tool - Solution File
+POST http://localhost:5000/
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "method": "tools/call",
+  "params": {
+    "name": "check_file_exists",
+    "arguments": {
+      "fileName": "SampleCodeBase.sln"
+    }
+  }
+}
+
+###
+
+### Shell Execute - Get .NET Version
+POST http://localhost:5000/
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 5,
+  "method": "tools/call",
+  "params": {
+    "name": "ShellExecuteAsync",
+    "arguments": {
+      "command": "dotnet",
+      "arguments": ["--version"]
+    }
+  }
+}
+
+###
+
+### Shell Execute - Search for .cs files with ripgrep
+POST http://localhost:5000/
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 6,
+  "method": "tools/call",
+  "params": {
+    "name": "ShellExecuteAsync",
+    "arguments": {
+      "command": "rg",
+      "arguments": ["--files", "--type", "cs"]
+    }
+  }
+}
+
+###
+
+### Shell Execute - List directory tree
+POST http://localhost:5000/
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 7,
+  "method": "tools/call",
+  "params": {
+    "name": "ShellExecuteAsync",
+    "arguments": {
+      "command": "tree",
+      "arguments": ["-L", "2"]
+    }
+  }
+}
+
+###
+
+### Shell Execute JSON - Parse package.json with jq
+POST http://localhost:5000/
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 8,
+  "method": "tools/call",
+  "params": {
+    "name": "ShellExecuteJsonAsync",
+    "arguments": {
+      "command": "echo",
+      "arguments": ["{\"version\": \"1.0.0\", \"name\": \"test-package\"}"]
+    }
+  }
+}
+
+###
+
+### Shell Get Available Tools
+POST http://localhost:5000/
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 9,
+  "method": "tools/call",
+  "params": {
+    "name": "ShellGetAvailableToolsAsync",
+    "arguments": {}
+  }
+}
+
+###

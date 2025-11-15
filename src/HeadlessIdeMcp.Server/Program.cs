@@ -1,4 +1,5 @@
 using HeadlessIdeMcp.Core;
+using HeadlessIdeMcp.Core.ProcessExecution;
 using HeadlessIdeMcp.Server;
 using ModelContextProtocol.Server;
 
@@ -9,6 +10,7 @@ var codeBasePath = Environment.GetEnvironmentVariable("CODE_BASE_PATH") ?? "/wor
 
 // Register services
 builder.Services.AddSingleton<IFileSystemService>(sp => new FileSystemService(codeBasePath));
+builder.Services.AddSingleton<ICommandExecutionService>(sp => new CommandExecutionService(codeBasePath));
 
 // Configure MCP Server
 builder.Services

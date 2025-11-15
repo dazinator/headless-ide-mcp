@@ -276,7 +276,7 @@ Update all documentation to reflect the new CLI-first architecture and shell exe
 - [ ] README.md updated with shell_execute examples
 - [ ] docs/getting-started.md updated
 - [ ] docs/project-setup.md updated
-- [ ] test-mcp-server.http updated with shell_execute examples
+- [ ] .http/test-mcp-server.http updated with shell_execute examples
 - [ ] New docs/usage-guide.md created
 - [ ] Security section added to docs
 - [ ] All code examples tested and working
@@ -288,7 +288,7 @@ Update all documentation to reflect the new CLI-first architecture and shell exe
 - `docs/project-setup.md` (MODIFY)
 - `docs/usage-guide.md` (NEW)
 - `docs/security.md` (NEW)
-- `test-mcp-server.http` (MODIFY)
+- `.http/test-mcp-server.http` (MODIFY)
 
 **Documentation Sections:**
 1. **README.md:**
@@ -310,7 +310,7 @@ Update all documentation to reflect the new CLI-first architecture and shell exe
    - Timeout enforcement
    - Production deployment recommendations
 
-4. **test-mcp-server.http:**
+4. **.http/test-mcp-server.http:**
    - Add shell_execute examples
    - Add shell_execute_json examples
    - Add shell_get_available_tools example
