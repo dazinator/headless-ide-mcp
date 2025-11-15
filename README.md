@@ -1,15 +1,17 @@
 # Headless IDE MCP
 
-A Model Context Protocol (MCP) server built with ASP.NET Core that provides tools for analyzing .NET codebases. This server exposes MCP tools that can be consumed by AI assistants and other MCP clients to understand and work with .NET projects.
+A Model Context Protocol (MCP) server built with ASP.NET Core that provides tools for analyzing .NET codebases and executing shell commands in a secure, sandboxed environment. This server exposes MCP tools that can be consumed by AI assistants and other MCP clients to understand and work with .NET projects.
 
 ## Features
 
 - **MCP Server**: ASP.NET Core application using the official [ModelContextProtocol.AspNetCore](https://www.nuget.org/packages/ModelContextProtocol.AspNetCore) SDK
+- **Shell Command Execution**: Execute CLI commands (dotnet, git, ripgrep, jq, etc.) in a sandboxed environment
 - **File System Tools**: Check file existence and analyze project structure
-- **Docker Support**: Full containerization with Docker Compose
+- **Docker Support**: Full containerization with DevContainer base image including development tools
 - **VS2022 Debugging**: Docker Compose project for F5 debugging experience
-- **Integration Testing**: Real file system tests with no mocked dependencies
+- **Integration Testing**: Real file system and process execution tests with no mocked dependencies
 - **Sample Codebase**: Included .NET solution for testing and demonstration
+- **Security Controls**: Path validation, timeout enforcement, and command sandboxing
 
 ## Quick Start
 
@@ -82,7 +84,79 @@ headless-ide-mcp/
 
 ## Available MCP Tools
 
-### check_file_exists
+### Shell Execution Tools
+
+#### ShellExecuteAsync
+
+Execute a CLI command in a sandboxed environment and get stdout, stderr, and exit code.
+
+**Parameters:**
+- `command`: The command to execute (e.g., 'dotnet', 'rg', 'jq')
+- `arguments`: Command arguments as array (optional)
+- `workingDirectory`: Working directory for command execution (optional, relative to workspace or absolute)
+- `timeoutSeconds`: Timeout in seconds (default: 30, max: 300)
+
+**Example:**
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "name": "ShellExecuteAsync",
+    "arguments": {
+      "command": "dotnet",
+      "arguments": ["--version"]
+    }
+  }
+}
+```
+
+#### ShellExecuteJsonAsync
+
+Execute a CLI command that returns JSON output and automatically parse the response.
+
+**Parameters:**
+- `command`: The command to execute (e.g., 'dotnet', 'jq')
+- `arguments`: Command arguments as array (optional)
+- `workingDirectory`: Working directory for command execution (optional)
+- `timeoutSeconds`: Timeout in seconds (default: 30, max: 300)
+
+**Example:**
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "name": "ShellExecuteJsonAsync",
+    "arguments": {
+      "command": "jq",
+      "arguments": [".version", "package.json"]
+    }
+  }
+}
+```
+
+#### ShellGetAvailableToolsAsync
+
+Get a list of available CLI tools in the container environment.
+
+**Example:**
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "name": "ShellGetAvailableToolsAsync",
+    "arguments": {}
+  }
+}
+```
+
+**Returns:** List of tools with availability status and versions (dotnet, git, rg, jq, tree, bash, curl, find)
+
+### File System Tools
+
+#### CheckFileExists
 
 Checks if a specific file exists in the code base.
 
