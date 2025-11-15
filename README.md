@@ -11,7 +11,9 @@ A Model Context Protocol (MCP) server built with ASP.NET Core that provides tool
 - **VS2022 Debugging**: Docker Compose project for F5 debugging experience
 - **Integration Testing**: Real file system and process execution tests with no mocked dependencies
 - **Sample Codebase**: Included .NET solution for testing and demonstration
-- **Security Controls**: Path validation, timeout enforcement, and command sandboxing
+- **Production Security**: Command allowlist/denylist, error sanitization, and comprehensive audit logging
+- **Resource Limits**: Docker CPU and memory limits to prevent resource exhaustion
+- **Container Security**: Non-root user, capability dropping, and no-new-privileges mode
 
 ## Quick Start
 
@@ -58,10 +60,31 @@ Content-Type: application/json
 }
 ```
 
+## Security
+
+The Headless IDE MCP server implements production-grade security controls:
+
+- **Command Validation**: Allowlist/denylist enforcement to block dangerous commands
+- **Path Restrictions**: Commands confined to approved directories only
+- **Error Sanitization**: Generic error messages prevent information disclosure
+- **Audit Logging**: All command executions logged with correlation IDs
+- **Resource Limits**: CPU (2 cores) and memory (1GB) limits prevent DoS attacks
+- **Container Hardening**: Non-root user, capability dropping, no-new-privileges mode
+- **Sensitive Data Redaction**: Passwords, tokens, and secrets redacted from logs
+- **Comprehensive Testing**: 44 integration tests including 15 security-specific tests
+
+For detailed security information, see:
+- **[Security Documentation](docs/security.md)** - Security architecture and controls
+- **[Security Test Report](docs/security-test-report.md)** - Penetration testing results
+- **[Security Checklist](docs/security-checklist.md)** - Pre-deployment validation
+
+**Security Status:** ✅ No critical, high, or medium severity vulnerabilities
+
 ## Documentation
 
 - **[Getting Started Guide](docs/getting-started.md)** - Learn how to run and use the MCP server
 - **[Project Setup](docs/project-setup.md)** - Understand the architecture and how to add new tools
+- **[Operations Guide](docs/operations.md)** - Monitoring, logging, and maintenance procedures
 
 ## Project Structure
 
