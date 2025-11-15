@@ -22,9 +22,9 @@ public class ShellTools
     /// <summary>
     /// Execute a shell command and return stdout, stderr, and exit code
     /// </summary>
-    [McpServerTool("shell_execute")]
+    [McpServerTool]
     [Description("Execute a CLI command in a sandboxed environment. Returns stdout, stderr, and exit code.")]
-    public async Task<ShellExecuteResponse> ExecuteAsync(
+    public async Task<ShellExecuteResponse> ShellExecuteAsync(
         [Description("The command to execute (e.g., 'dotnet', 'rg', 'jq')")] 
         string command,
         
@@ -60,9 +60,9 @@ public class ShellTools
     /// <summary>
     /// Execute a command that returns JSON and parse the result
     /// </summary>
-    [McpServerTool("shell_execute_json")]
+    [McpServerTool]
     [Description("Execute a CLI command that returns JSON output. Automatically parses the JSON response.")]
-    public async Task<ShellExecuteJsonResponse> ExecuteJsonAsync(
+    public async Task<ShellExecuteJsonResponse> ShellExecuteJsonAsync(
         [Description("The command to execute (e.g., 'dotnet', 'jq')")] 
         string command,
         
@@ -114,9 +114,9 @@ public class ShellTools
     /// <summary>
     /// Get information about available CLI tools in the container
     /// </summary>
-    [McpServerTool("shell_get_available_tools")]
+    [McpServerTool]
     [Description("Get a list of available CLI tools in the container environment")]
-    public async Task<AvailableToolsResponse> GetAvailableToolsAsync()
+    public async Task<AvailableToolsResponse> ShellGetAvailableToolsAsync()
     {
         var tools = new List<ToolInfo>();
         var toolsToCheck = new[]
