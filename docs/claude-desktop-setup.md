@@ -265,11 +265,19 @@ The `/c` flag tells `cmd` to execute the command and then terminate. This proper
    - Check Docker logs: `docker-compose logs headless-ide-mcp`
 
 3. **Test the MCP server directly** with a tools/list request:
+   
+   **PowerShell:**
+   ```powershell
+   Invoke-WebRequest -Uri "http://localhost:5000/" -Method POST -ContentType "application/json" -Body '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+   ```
+   
+   **Command Prompt / macOS / Linux:**
    ```bash
    curl -X POST http://localhost:5000/ \
      -H "Content-Type: application/json" \
      -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
    ```
+   
    You should get a JSON response listing available tools.
    
    If this fails, the MCP server has an issue - check container logs.
@@ -293,7 +301,7 @@ The `/c` flag tells `cmd` to execute the command and then terminate. This proper
    -- MCP stdio to SSE gateway running - connected to http://localhost:5000
    ```
    
-   If it connects but then times out, the MCP server is running but not responding to MCP protocol messages. Check that the server is built correctly.
+   If it connects but then times out, the MCP server is running but not responding to MCP protocol messages. See the "Message Processing Canceled" section below.
 
 5. **Restart everything in order**:
    - Stop Claude Desktop completely (not just close - actually quit)
@@ -302,6 +310,61 @@ The `/c` flag tells `cmd` to execute the command and then terminate. This proper
    - Verify health endpoint works: `curl http://localhost:5000/health`
    - Start Claude Desktop
    - Open Developer Settings to watch the logs
+
+### "Message Processing Canceled" Error
+
+**Problem**: Health endpoint works (`http://localhost:5000/health` returns healthy status), but container logs show:
+```
+Server (HeadlessIdeMcp.Server 1.0.0.0) message processing canceled.
+```
+
+**Cause**: The MCP server is receiving requests but the HTTP/SSE transport is not completing the handshake properly. This can happen when:
+- The bridge is sending requests to the wrong endpoint
+- There's a protocol version mismatch
+- The server is rejecting the connection
+
+**Solution**:
+
+1. **Verify you're using the correct URL format** - it must end with a `/`:
+   ```json
+   {
+     "mcpServers": {
+       "dev_buddy": {
+         "command": "cmd",
+         "args": ["/c", "npx", "-y", "mcp-server-and-gw", "http://localhost:5000/"]
+       }
+     }
+   }
+   ```
+   Note the trailing `/` in `http://localhost:5000/` - this is required.
+
+2. **Test the tools/list endpoint works**:
+   
+   **PowerShell:**
+   ```powershell
+   $response = Invoke-WebRequest -Uri "http://localhost:5000/" -Method POST -ContentType "application/json" -Body '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+   $response.Content
+   ```
+   
+   You should see a JSON response with `"result":{"tools":[...]}` listing available tools.
+
+3. **Check if the bridge is using the correct protocol**:
+   - The `mcp-server-and-gw` bridge expects an SSE endpoint
+   - Verify the server is exposing SSE by checking the response headers include `text/event-stream`
+
+4. **Try testing with the .http file** to verify MCP protocol works:
+   - Check the `.http/test-mcp-server.http` file in the repository
+   - Use VS Code with REST Client extension or similar to test the endpoints
+   - Verify `tools/list` and `tools/call` methods work
+
+5. **If the issue persists**, this may indicate a compatibility issue between:
+   - The MCP server implementation (ModelContextProtocol.AspNetCore)
+   - The bridge proxy (mcp-server-and-gw)
+   - Claude Desktop's expected protocol version
+   
+   Consider checking:
+   - Docker container logs: `docker-compose logs -f headless-ide-mcp`
+   - Whether the server needs to be rebuilt: `docker-compose up --build`
 
 ### Connection Issues
 
