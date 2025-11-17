@@ -203,26 +203,26 @@ Consider implementing session management at the application layer:
 ```javascript
 // These can run concurrently without any issues
 Promise.all([
-  mcpClient.callTool("ShellExecuteAsync", { command: "dotnet", arguments: ["--version"] }),
-  mcpClient.callTool("ShellExecuteAsync", { command: "git", arguments: ["status"] }),
-  mcpClient.callTool("ShellExecuteAsync", { command: "rg", arguments: ["TODO"] })
+  mcpClient.callTool("shell_execute", { command: "dotnet", arguments: ["--version"] }),
+  mcpClient.callTool("shell_execute", { command: "git", arguments: ["status"] }),
+  mcpClient.callTool("shell_execute", { command: "rg", arguments: ["TODO"] })
 ])
 ```
 
 **Pattern 2: Sequential Workflow (if needed)**
 ```javascript
 // Execute commands sequentially if order matters
-const version = await mcpClient.callTool("ShellExecuteAsync", { 
+const version = await mcpClient.callTool("shell_execute", { 
   command: "dotnet", 
   arguments: ["--version"] 
 });
 
-const build = await mcpClient.callTool("ShellExecuteAsync", { 
+const build = await mcpClient.callTool("shell_execute", { 
   command: "dotnet", 
   arguments: ["build"] 
 });
 
-const test = await mcpClient.callTool("ShellExecuteAsync", { 
+const test = await mcpClient.callTool("shell_execute", { 
   command: "dotnet", 
   arguments: ["test"] 
 });
@@ -233,14 +233,14 @@ const test = await mcpClient.callTool("ShellExecuteAsync", {
 // Use correlation IDs to track related operations
 const correlationId = crypto.randomUUID();
 
-await mcpClient.callTool("ShellExecuteAsync", { 
+await mcpClient.callTool("shell_execute", { 
   command: "dotnet",
   arguments: ["build"],
   correlationId: correlationId,
   user: "developer-1"
 });
 
-await mcpClient.callTool("ShellExecuteAsync", { 
+await mcpClient.callTool("shell_execute", { 
   command: "dotnet",
   arguments: ["test"],
   correlationId: correlationId,

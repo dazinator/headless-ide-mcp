@@ -6,9 +6,11 @@ This guide explains how to use the shell execution tools provided by the Headles
 
 The MCP server provides three main shell execution tools:
 
-1. **ShellExecuteAsync** - Execute any CLI command and get stdout, stderr, and exit code
-2. **ShellExecuteJsonAsync** - Execute commands that return JSON and automatically parse the output
-3. **ShellGetAvailableToolsAsync** - Check which CLI tools are available in the container
+1. **shell_execute** - Execute any CLI command and get stdout, stderr, and exit code
+2. **shell_execute_json** - Execute commands that return JSON and automatically parse the output
+3. **shell_get_available_tools** - Check which CLI tools are available in the container
+
+> **Note:** The C# methods are named `ShellExecuteAsync`, `ShellExecuteJsonAsync`, and `ShellGetAvailableToolsAsync`, but the MCP framework automatically converts these to snake_case for the tool names.
 
 ## Available CLI Tools
 
@@ -32,7 +34,7 @@ The DevContainer-based Docker image includes the following tools:
 #### Get .NET version
 ```json
 {
-  "name": "ShellExecuteAsync",
+  "name": "shell_execute",
   "arguments": {
     "command": "dotnet",
     "arguments": ["--version"]
@@ -43,7 +45,7 @@ The DevContainer-based Docker image includes the following tools:
 #### Build a project
 ```json
 {
-  "name": "ShellExecuteAsync",
+  "name": "shell_execute",
   "arguments": {
     "command": "dotnet",
     "arguments": ["build", "MyProject.csproj"],
@@ -56,7 +58,7 @@ The DevContainer-based Docker image includes the following tools:
 #### Run tests
 ```json
 {
-  "name": "ShellExecuteAsync",
+  "name": "shell_execute",
   "arguments": {
     "command": "dotnet",
     "arguments": ["test", "--verbosity", "normal"],
@@ -70,7 +72,7 @@ The DevContainer-based Docker image includes the following tools:
 #### Find all TODO comments
 ```json
 {
-  "name": "ShellExecuteAsync",
+  "name": "shell_execute",
   "arguments": {
     "command": "rg",
     "arguments": ["TODO", "--type", "cs"]
@@ -81,7 +83,7 @@ The DevContainer-based Docker image includes the following tools:
 #### Search for a specific method
 ```json
 {
-  "name": "ShellExecuteAsync",
+  "name": "shell_execute",
   "arguments": {
     "command": "rg",
     "arguments": ["public class Calculator", "--files-with-matches"]
@@ -92,7 +94,7 @@ The DevContainer-based Docker image includes the following tools:
 #### Count lines of code
 ```json
 {
-  "name": "ShellExecuteAsync",
+  "name": "shell_execute",
   "arguments": {
     "command": "rg",
     "arguments": ["--count-matches", "^", "--type", "cs"]
@@ -105,7 +107,7 @@ The DevContainer-based Docker image includes the following tools:
 #### Parse and extract JSON fields
 ```json
 {
-  "name": "ShellExecuteJsonAsync",
+  "name": "shell_execute_json",
   "arguments": {
     "command": "jq",
     "arguments": [".version", "package.json"]
@@ -116,7 +118,7 @@ The DevContainer-based Docker image includes the following tools:
 #### Filter JSON array
 ```json
 {
-  "name": "ShellExecuteJsonAsync",
+  "name": "shell_execute_json",
   "arguments": {
     "command": "jq",
     "arguments": [".[].name", "data.json"]
@@ -129,7 +131,7 @@ The DevContainer-based Docker image includes the following tools:
 #### List directory structure
 ```json
 {
-  "name": "ShellExecuteAsync",
+  "name": "shell_execute",
   "arguments": {
     "command": "tree",
     "arguments": ["-L", "2", "-I", "bin|obj"]
@@ -140,7 +142,7 @@ The DevContainer-based Docker image includes the following tools:
 #### Find all .csproj files
 ```json
 {
-  "name": "ShellExecuteAsync",
+  "name": "shell_execute",
   "arguments": {
     "command": "find",
     "arguments": [".", "-name", "*.csproj"]
@@ -153,7 +155,7 @@ The DevContainer-based Docker image includes the following tools:
 #### Check git status
 ```json
 {
-  "name": "ShellExecuteAsync",
+  "name": "shell_execute",
   "arguments": {
     "command": "git",
     "arguments": ["status", "--short"]
@@ -164,7 +166,7 @@ The DevContainer-based Docker image includes the following tools:
 #### View commit history
 ```json
 {
-  "name": "ShellExecuteAsync",
+  "name": "shell_execute",
   "arguments": {
     "command": "git",
     "arguments": ["log", "--oneline", "-10"]
@@ -246,7 +248,7 @@ If attempting to access unauthorized paths:
 ```json
 // 1. List all projects
 {
-  "name": "ShellExecuteAsync",
+  "name": "shell_execute",
   "arguments": {
     "command": "find",
     "arguments": [".", "-name", "*.csproj"]
@@ -255,7 +257,7 @@ If attempting to access unauthorized paths:
 
 // 2. Get project dependencies
 {
-  "name": "ShellExecuteAsync",
+  "name": "shell_execute",
   "arguments": {
     "command": "dotnet",
     "arguments": ["list", "package"]
@@ -264,7 +266,7 @@ If attempting to access unauthorized paths:
 
 // 3. Search for specific patterns
 {
-  "name": "ShellExecuteAsync",
+  "name": "shell_execute",
   "arguments": {
     "command": "rg",
     "arguments": ["using System.Threading", "--count"]
@@ -277,7 +279,7 @@ If attempting to access unauthorized paths:
 ```json
 // Execute and parse in one step
 {
-  "name": "ShellExecuteJsonAsync",
+  "name": "shell_execute_json",
   "arguments": {
     "command": "dotnet",
     "arguments": ["build", "/t:GetProjectInfo", "/p:JsonOutput=true"]

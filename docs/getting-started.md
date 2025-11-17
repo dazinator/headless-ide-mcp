@@ -185,6 +185,29 @@ docker build -t headless-ide-mcp:dev .
 
 ## Troubleshooting
 
+### JSON Response Contains \u0027 or Other Escape Sequences
+
+If you see escape sequences like `\u0027` in JSON responses, this is **normal and expected**. The MCP server returns JSON responses where special characters are properly escaped according to the JSON specification:
+
+- `\u0027` = single quote (')
+- `\u0022` = double quote (")
+- `\n` = newline
+- `\t` = tab
+
+**Example Response:**
+```json
+{
+  "error": {
+    "code": -32602,
+    "message": "Unknown tool: \u0027shell_execute\u0027"
+  }
+}
+```
+
+This is **not a security feature** but standard JSON encoding. When the JSON is properly parsed by a client, these escape sequences are automatically converted back to their original characters.
+
+**Important:** Make sure you're using the correct tool names. Tool names are in snake_case (e.g., `shell_execute`, not `ShellExecuteAsync`). Use the `tools/list` method to see all available tool names.
+
 ### Container cannot access mounted volume
 
 If the container cannot see the sample codebase:
