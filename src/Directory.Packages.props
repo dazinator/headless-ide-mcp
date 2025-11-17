@@ -14,10 +14,8 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.0" />
-
     <!--MCP Server-->
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="0.4.0-preview.3" />
-
     <!--Tests-->
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.11" />
@@ -26,16 +24,12 @@
     <PackageVersion Include="NSubstitute" Version="5.3.0" />
     <PackageVersion Include="Bogus" Version="35.6.3" />
     <PackageVersion Include="Testcontainers" Version="4.7.0" />
-
     <!--xunit-->
-  
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.4" />
-
     <!--xunit v2-->
     <PackageVersion Include="xunit" Version="2.9.3" />
-  
     <PackageVersion Include="Verify.Xunit" Version="30.17.0" />
-    <PackageVersion Include="MartinCostello.Logging.XUnit" Version="0.3.0" />      
+    <PackageVersion Include="MartinCostello.Logging.XUnit" Version="0.3.0" />
     <PackageVersion Include="MELT.Xunit" Version="1.1.0-preview.1" />
     <!--see https://github.com/brendanconnolly/Xunit.Categories/pull/46-->
     <PackageVersion Include="xunit.categories" Version="3.0.1" />
@@ -44,7 +38,5 @@
     <PackageVersion Include="Verify.XunitV3" Version="31.0.0-beta.1" />
     <PackageVersion Include="MartinCostello.Logging.XUnit.v3" Version="0.6.0" />
     <PackageVersion Include="MELT.Xunit.v3" Version="1.1.0-preview.1" />
-
-
   </ItemGroup>
 </Project>

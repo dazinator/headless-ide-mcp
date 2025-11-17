@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HeadlessIdeMcp.Server", "He
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HeadlessIdeMcp.IntegrationTests", "HeadlessIdeMcp.IntegrationTests\HeadlessIdeMcp.IntegrationTests.csproj", "{296D227F-B752-4A74-BC67-60D9AA585F79}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HeadlessIdeMcp.Bridge", "HeadlessIdeMcp.Bridge\HeadlessIdeMcp.Bridge.csproj", "{856F7C34-C05E-4F26-9D7E-2F19DED574E1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{296D227F-B752-4A74-BC67-60D9AA585F79}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{296D227F-B752-4A74-BC67-60D9AA585F79}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{296D227F-B752-4A74-BC67-60D9AA585F79}.Release|Any CPU.Build.0 = Release|Any CPU
+		{856F7C34-C05E-4F26-9D7E-2F19DED574E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{856F7C34-C05E-4F26-9D7E-2F19DED574E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{856F7C34-C05E-4F26-9D7E-2F19DED574E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{856F7C34-C05E-4F26-9D7E-2F19DED574E1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
