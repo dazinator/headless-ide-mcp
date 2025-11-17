@@ -36,6 +36,7 @@ nav:
   - Claude Desktop Setup: claude-desktop-setup.md
   - Project Setup: project-setup.md
   - Authentication: authentication.md
+  - Git Authentication: git-authentication.md
   - Security: security.md
   - Operations: operations.md
   - Shell Execution Usage: shell-execution-usage.md

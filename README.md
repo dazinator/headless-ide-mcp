@@ -36,6 +36,26 @@ The container automatically manages HTTPS certificates with three options:
 
 See [HTTPS Configuration](docs/https-setup.md) for detailed setup instructions.
 
+### Git Authentication (Optional)
+
+To enable git operations with remote repositories (GitHub, Azure DevOps):
+
+**Option 1: Environment Variables**
+1. Copy `.env.example` to `.env`
+2. Add your Personal Access Tokens (PATs):
+   ```bash
+   GITHUB_PAT=ghp_your_token_here
+   AZDO_PAT=your_azdo_token_here
+   ```
+3. Run `docker-compose up --build`
+
+**Option 2: Mount Credentials File**
+1. Uncomment the git credentials volume mount in `docker-compose.yml`
+2. Ensure `~/.git-credentials` exists on your host with your tokens
+3. Run `docker-compose up --build`
+
+See [Git Authentication](docs/git-authentication.md) for detailed setup and security information.
+
 ### Test the Server
 
 Use the provided `.http/test-mcp-server.http` file with your HTTP client:
@@ -100,6 +120,7 @@ For detailed security information, see:
 
 - **[Getting Started Guide](docs/getting-started.md)** - Learn how to run and use the MCP server
 - **[HTTPS Configuration](docs/https-setup.md)** - Configure HTTPS and development certificates
+- **[Git Authentication](docs/git-authentication.md)** - Configure git credentials for remote operations
 - **[Claude Desktop Setup](docs/claude-desktop-setup.md)** - Connect Claude Desktop to the containerized MCP server
 - **[Project Setup](docs/project-setup.md)** - Understand the architecture and how to add new tools
 - **[Operations Guide](docs/operations.md)** - Monitoring, logging, and maintenance procedures

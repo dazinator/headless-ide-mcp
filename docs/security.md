@@ -259,6 +259,9 @@ Audit logs automatically redact sensitive patterns:
 - Tokens: `token=abc123` → `token=***REDACTED***`
 - Keys: `key=xyz789` → `key=***REDACTED***`
 - Secrets: `secret=value` → `secret=***REDACTED***`
+- Git credentials in URLs: `https://user:token@github.com` → `https://***REDACTED***@github.com`
+
+**Note**: Git authentication credentials configured via environment variables (GITHUB_PAT, AZDO_PAT) are stored in the container's file system but are never logged or exposed to MCP clients. See [Git Authentication](git-authentication.md) for details.
 
 ### Log Format Example
 
