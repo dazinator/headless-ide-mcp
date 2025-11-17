@@ -11,15 +11,30 @@ The Headless IDE MCP server uses **HTTP transport** and runs as a containerized 
 
 ## Method 1: Remote MCP Connector (Recommended)
 
-**Claude Desktop now supports direct HTTP connections to remote MCP servers** through its "Custom Connectors" feature (currently in Beta). This is the simplest and most direct approach.
+**⚠️ IMPORTANT LIMITATION**: Claude Desktop's remote connector currently **requires HTTPS** for security. The default container configuration only supports HTTP, which means this method won't work out of the box.
+
+**Status:** This method is recommended for its simplicity, but requires HTTPS support to be added to the container first. See [Issue #TBD] for HTTPS support progress.
+
+**Claude Desktop supports direct HTTPS connections to remote MCP servers** through its "Custom Connectors" feature (currently in Beta). Once HTTPS is configured, this is the simplest approach.
 
 ### Prerequisites
 
 - Claude Desktop installed ([download here](https://claude.ai/download))
 - Docker Desktop running
-- Headless IDE MCP server running in Docker
+- **Headless IDE MCP server with HTTPS enabled** (⚠️ not yet implemented - see limitation above)
 
-### Step 1: Start the Headless IDE MCP Server
+### Current Limitation
+
+The remote connector will show the error: **"URL must start with 'https'"** when trying to use `http://localhost:5000/`.
+
+To use this method, the container needs to be configured with:
+- HTTPS certificate (development or production)
+- HTTPS port exposed and configured
+- Proper certificate mounting in Docker
+
+**For now, use [Method 2: stdio Bridge Proxy](#method-2-stdio-bridge-proxy-alternative)** which doesn't have this HTTPS requirement.
+
+### Step 1: Start the Headless IDE MCP Server (When HTTPS is Available)
 
 Ensure the MCP server is running with Docker Compose:
 
@@ -27,11 +42,11 @@ Ensure the MCP server is running with Docker Compose:
 docker-compose up --build
 ```
 
-The server will be available at `http://localhost:5000`
+The server will be available at `https://localhost:5001` (when HTTPS is configured)
 
 Verify it's running:
 ```bash
-curl http://localhost:5000/health
+curl https://localhost:5001/health --insecure
 ```
 
 You should see:
@@ -39,19 +54,19 @@ You should see:
 {"status":"healthy","codeBasePath":"/workspace"}
 ```
 
-### Step 2: Add Remote Connector in Claude Desktop
+### Step 2: Add Remote Connector in Claude Desktop (When HTTPS is Available)
 
 1. Open Claude Desktop
 2. Go to **Settings** → **Developer** (or **Integrations**)
 3. Click **"Add custom connector"** or **"Add MCP Server"**
 4. In the dialog:
    - **Name**: `Headless IDE` (or any name you prefer)
-   - **Remote MCP server URL**: `http://localhost:5000/`
+   - **Remote MCP server URL**: `https://localhost:5001/` (**must be HTTPS**)
 5. Click **"Add"**
 
-Claude Desktop will connect directly to your HTTP MCP server - no bridge needed!
+Claude Desktop will connect directly to your HTTPS MCP server - no bridge needed!
 
-### Step 3: Verify the Connection
+### Step 3: Verify the Connection (When HTTPS is Available)
 
 1. Start a new conversation in Claude Desktop
 2. Look for the tool icon (🔧) or check if MCP tools are available
@@ -60,24 +75,26 @@ Claude Desktop will connect directly to your HTTP MCP server - no bridge needed!
    - "What tools are available in the shell environment?"
    - "Run `dotnet --version` in the workspace"
 
-**That's it!** The remote connector handles the HTTP communication natively.
+**That's it!** The remote connector handles the HTTPS communication natively.
 
-**Benefits of this method:**
+**Benefits of this method (when HTTPS is available):**
 - ✅ No bridge proxy needed
 - ✅ No Node.js installation required
-- ✅ Direct HTTP connection
+- ✅ Direct HTTPS connection
 - ✅ Simpler configuration
 - ✅ Native Claude Desktop feature
 
 ---
 
-## Method 2: stdio Bridge Proxy (Alternative)
+## Method 2: stdio Bridge Proxy (Currently Recommended)
 
-**Use this method if:**
-- Your Claude Desktop version doesn't have the remote connector feature yet
-- You need stdio-based communication for specific requirements
+**✅ Use this method** - It's currently the only working option since:
+- The container doesn't support HTTPS yet (required for Method 1)
+- The bridge connects to HTTP locally, bypassing Claude's HTTPS requirement
 
-If you're using an older version of Claude Desktop that doesn't have the remote connector feature, you can use a bridge proxy instead.
+**Note**: There are known protocol compatibility issues between some stdio-to-HTTP bridges and the ASP.NET Core MCP implementation. If the bridge doesn't work, HTTPS support needs to be added to use Method 1.
+
+### Architecture
 
 ### Architecture
 
@@ -271,9 +288,27 @@ If configured correctly, Claude will use the MCP tools from your containerized s
    ```
    Should return: `{"status":"healthy","codeBasePath":"/workspace"}`
 
-3. **Check the URL format** - must end with `/`: `http://localhost:5000/`
+3. **Check the URL format** - must end with `/`: `https://localhost:5001/` (when HTTPS is available)
 
 4. **Restart both** the Docker container and Claude Desktop
+
+### "URL must start with 'https'" Error
+
+**Problem**: When adding a remote connector, Claude Desktop shows: **"URL must start with 'https'"**
+
+**Cause**: Claude Desktop's remote connector requires HTTPS for security. The current container only supports HTTP.
+
+**Solution**: 
+
+**Short-term**: Use [Method 2 (stdio Bridge Proxy)](#method-2-stdio-bridge-proxy-currently-recommended) which doesn't require HTTPS.
+
+**Long-term**: The container needs HTTPS support added. This requires:
+1. Development certificate generated and configured
+2. Certificate mounted in Docker container
+3. HTTPS port exposed (5001)
+4. Program.cs configured for HTTPS URLs
+
+Track progress on adding HTTPS support in the repository issues.
 
 ### "npx is not recognized" Error on Windows
 
