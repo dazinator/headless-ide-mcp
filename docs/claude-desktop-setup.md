@@ -234,6 +234,75 @@ If configured correctly, Claude will use the MCP tools from your containerized s
 
 The `/c` flag tells `cmd` to execute the command and then terminate. This properly spawns the `npx` process on Windows.
 
+### "Request timed out" / "Server disconnected" Error
+
+**Problem**: Claude Desktop logs show the bridge connects successfully but then displays:
+- "MCP error -32001: Request timed out"
+- "Server disconnected"
+- Bridge logs show: `--- SSE backend connected` but then times out
+
+**Cause**: The MCP server container is either not running, not accessible, or not responding to requests.
+
+**Solution**:
+
+1. **Verify the Docker container is actually running**:
+   ```bash
+   docker ps
+   ```
+   Look for `headless-ide-mcp-server` in the list. If it's not there, start it:
+   ```bash
+   docker-compose up -d
+   ```
+
+2. **Check the MCP server is responding**:
+   ```bash
+   curl http://localhost:5000/health
+   ```
+   You should see: `{"status":"healthy","codeBasePath":"/workspace"}`
+   
+   If you get "Connection refused" or no response:
+   - The container isn't running (see step 1)
+   - Check Docker logs: `docker-compose logs headless-ide-mcp`
+
+3. **Test the MCP server directly** with a tools/list request:
+   ```bash
+   curl -X POST http://localhost:5000/ \
+     -H "Content-Type: application/json" \
+     -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+   ```
+   You should get a JSON response listing available tools.
+   
+   If this fails, the MCP server has an issue - check container logs.
+
+4. **Verify the bridge can connect** (test manually):
+   
+   **Windows (Command Prompt):**
+   ```cmd
+   npx -y mcp-server-and-gw http://localhost:5000/
+   ```
+   
+   **macOS/Linux:**
+   ```bash
+   npx -y mcp-server-and-gw http://localhost:5000/
+   ```
+   
+   You should see:
+   ```
+   -- Connecting to MCP server at http://localhost:5000
+   --- SSE backend connected
+   -- MCP stdio to SSE gateway running - connected to http://localhost:5000
+   ```
+   
+   If it connects but then times out, the MCP server is running but not responding to MCP protocol messages. Check that the server is built correctly.
+
+5. **Restart everything in order**:
+   - Stop Claude Desktop completely (not just close - actually quit)
+   - Restart the Docker container: `docker-compose restart`
+   - Wait 10 seconds for the server to fully start
+   - Verify health endpoint works: `curl http://localhost:5000/health`
+   - Start Claude Desktop
+   - Open Developer Settings to watch the logs
+
 ### Connection Issues
 
 **Problem**: Claude Desktop shows "MCP server failed to start" or similar error.
