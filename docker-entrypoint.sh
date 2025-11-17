@@ -64,8 +64,8 @@ else
     echo "○ No existing credentials file found"
     echo "  Configuring credentials from environment variables"
     
-    # Determine the git username (use environment variable or default to current user)
-    GIT_USER="${GIT_USERNAME:-$(whoami)}"
+    # Determine the git username (use environment variable or default to 'vscode' to match container user)
+    GIT_USER="${GIT_USERNAME:-vscode}"
     echo "  Git username: $GIT_USER"
 
     # Configure GitHub credentials if GITHUB_PAT is provided

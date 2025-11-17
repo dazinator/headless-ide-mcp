@@ -18,6 +18,7 @@ services:
       - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
       - ASPNETCORE_Kestrel__Certificates__Default__Password=DevCertPassword
       # Git authentication (optional - use .env file or set these manually)
+      # Empty defaults allow optional configuration. See .env.example for format.
       - GIT_USERNAME=${GIT_USERNAME:-}
       - GITHUB_PAT=${GITHUB_PAT:-}
       - AZDO_PAT=${AZDO_PAT:-}
