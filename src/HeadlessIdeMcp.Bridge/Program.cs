@@ -64,6 +64,9 @@ try
             // Parse the JSON-RPC message
             var jsonDocument = JsonDocument.Parse(line);
             
+            // Check if this is a notification (no 'id' field)
+            var isNotification = !jsonDocument.RootElement.TryGetProperty("id", out _);
+            
             // Forward the message to the HTTP server
             var content = new StringContent(line, Encoding.UTF8, "application/json");
             var response = await httpClient.PostAsync(serverUrl, content);
@@ -72,19 +75,22 @@ try
             {
                 logToStderr($"Server returned error: {response.StatusCode}");
                 
-                // Send error response back to client
-                var errorResponse = new
+                // Only send error response back to client if this is not a notification
+                if (!isNotification)
                 {
-                    jsonrpc = "2.0",
-                    id = jsonDocument.RootElement.TryGetProperty("id", out var idProp) ? idProp.GetInt32() : (int?)null,
-                    error = new
+                    var errorResponse = new
                     {
-                        code = -32603,
-                        message = $"Server returned {response.StatusCode}"
-                    }
-                };
-                
-                await stdoutWriter.WriteLineAsync(JsonSerializer.Serialize(errorResponse));
+                        jsonrpc = "2.0",
+                        id = jsonDocument.RootElement.TryGetProperty("id", out var idProp) ? idProp.GetInt32() : (int?)null,
+                        error = new
+                        {
+                            code = -32603,
+                            message = $"Server returned {response.StatusCode}"
+                        }
+                    };
+                    
+                    await stdoutWriter.WriteLineAsync(JsonSerializer.Serialize(errorResponse));
+                }
                 continue;
             }
 
@@ -92,6 +98,13 @@ try
             var responseBody = await response.Content.ReadAsStringAsync();
             
             logToStderr($"Received response from server ({responseBody.Length} bytes)");
+            
+            // Notifications do not expect a response, skip writing to stdout
+            if (isNotification)
+            {
+                logToStderr("Message is a notification, no response will be sent to client");
+                continue;
+            }
             
             // Parse SSE format if present
             var jsonResponse = ParseSseResponse(responseBody);
