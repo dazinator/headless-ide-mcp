@@ -48,8 +48,8 @@ try
     logToStderr("Bridge ready - listening for MCP messages on stdin");
 
     // Process stdin messages and forward to HTTP server
-    using var stdinReader = new StreamReader(Console.OpenStandardInput(), Encoding.UTF8);
-    using var stdoutWriter = new StreamWriter(Console.OpenStandardOutput(), Encoding.UTF8) { AutoFlush = true };
+    using var stdinReader = new StreamReader(Console.OpenStandardInput(), new UTF8Encoding(false));
+    using var stdoutWriter = new StreamWriter(Console.OpenStandardOutput(), new UTF8Encoding(false)) { AutoFlush = true };
 
     string? line;
     while ((line = await stdinReader.ReadLineAsync()) != null)
