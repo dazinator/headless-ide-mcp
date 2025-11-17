@@ -111,9 +111,11 @@ headless-ide-mcp/
 
 ### Shell Execution Tools
 
-#### ShellExecuteAsync
+#### shell_execute
 
 Execute a CLI command in a sandboxed environment and get stdout, stderr, and exit code.
+
+**MCP Tool Name:** `shell_execute` (the C# method is `ShellExecuteAsync` but MCP converts it to snake_case)
 
 **Parameters:**
 - `command`: The command to execute (e.g., 'dotnet', 'rg', 'jq')
@@ -127,7 +129,7 @@ Execute a CLI command in a sandboxed environment and get stdout, stderr, and exi
   "jsonrpc": "2.0",
   "method": "tools/call",
   "params": {
-    "name": "ShellExecuteAsync",
+    "name": "shell_execute",
     "arguments": {
       "command": "dotnet",
       "arguments": ["--version"]
@@ -136,9 +138,11 @@ Execute a CLI command in a sandboxed environment and get stdout, stderr, and exi
 }
 ```
 
-#### ShellExecuteJsonAsync
+#### shell_execute_json
 
 Execute a CLI command that returns JSON output and automatically parse the response.
+
+**MCP Tool Name:** `shell_execute_json` (the C# method is `ShellExecuteJsonAsync` but MCP converts it to snake_case)
 
 **Parameters:**
 - `command`: The command to execute (e.g., 'dotnet', 'jq')
@@ -152,7 +156,7 @@ Execute a CLI command that returns JSON output and automatically parse the respo
   "jsonrpc": "2.0",
   "method": "tools/call",
   "params": {
-    "name": "ShellExecuteJsonAsync",
+    "name": "shell_execute_json",
     "arguments": {
       "command": "jq",
       "arguments": [".version", "package.json"]
@@ -161,9 +165,11 @@ Execute a CLI command that returns JSON output and automatically parse the respo
 }
 ```
 
-#### ShellGetAvailableToolsAsync
+#### shell_get_available_tools
 
 Get a list of available CLI tools in the container environment.
+
+**MCP Tool Name:** `shell_get_available_tools` (the C# method is `ShellGetAvailableToolsAsync` but MCP converts it to snake_case)
 
 **Example:**
 ```json
@@ -171,7 +177,7 @@ Get a list of available CLI tools in the container environment.
   "jsonrpc": "2.0",
   "method": "tools/call",
   "params": {
-    "name": "ShellGetAvailableToolsAsync",
+    "name": "shell_get_available_tools",
     "arguments": {}
   }
 }
@@ -181,9 +187,11 @@ Get a list of available CLI tools in the container environment.
 
 ### File System Tools
 
-#### CheckFileExists
+#### check_file_exists
 
 Checks if a specific file exists in the code base.
+
+**MCP Tool Name:** `check_file_exists` (the C# method is `CheckFileExists` and MCP converts it to snake_case)
 
 **Parameters:**
 - `fileName`: The file path to check (relative or absolute)

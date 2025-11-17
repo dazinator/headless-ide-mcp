@@ -84,7 +84,7 @@ Accept: application/json, text/event-stream
   "id": 5,
   "method": "tools/call",
   "params": {
-    "name": "ShellExecuteAsync",
+    "name": "shell_execute",
     "arguments": {
       "command": "dotnet",
       "arguments": ["--version"]
@@ -104,7 +104,7 @@ Accept: application/json, text/event-stream
   "id": 6,
   "method": "tools/call",
   "params": {
-    "name": "ShellExecuteAsync",
+    "name": "shell_execute",
     "arguments": {
       "command": "rg",
       "arguments": ["--files", "--type", "cs"]
@@ -124,7 +124,7 @@ Accept: application/json, text/event-stream
   "id": 7,
   "method": "tools/call",
   "params": {
-    "name": "ShellExecuteAsync",
+    "name": "shell_execute",
     "arguments": {
       "command": "tree",
       "arguments": ["-L", "2"]
@@ -144,7 +144,7 @@ Accept: application/json, text/event-stream
   "id": 8,
   "method": "tools/call",
   "params": {
-    "name": "ShellExecuteJsonAsync",
+    "name": "shell_execute_json",
     "arguments": {
       "command": "echo",
       "arguments": ["{\"version\": \"1.0.0\", \"name\": \"test-package\"}"]
@@ -164,7 +164,7 @@ Accept: application/json, text/event-stream
   "id": 9,
   "method": "tools/call",
   "params": {
-    "name": "ShellGetAvailableToolsAsync",
+    "name": "shell_get_available_tools",
     "arguments": {}
   }
 }
