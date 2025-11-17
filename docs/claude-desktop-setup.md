@@ -18,10 +18,13 @@ Headless IDE MCP Server (HTTP) in Docker Container
 
 ## Prerequisites
 
-- Claude Desktop installed ([download here](https://claude.ai/download))
-- Docker Desktop running
-- Node.js and npm installed (for npx)
-- Headless IDE MCP server running in Docker
+- **Claude Desktop** installed ([download here](https://claude.ai/download))
+- **Docker Desktop** running
+- **Node.js (v18 or later)** and **npm** installed - Required for the `npx` command that runs the bridge proxy
+  - Download from [nodejs.org](https://nodejs.org/)
+  - **Windows users**: After installation, restart your terminal/command prompt
+  - Verify installation by running: `node -v` and `npm -v`
+- **Headless IDE MCP server** running in Docker
 
 ## Step 1: Start the Headless IDE MCP Server
 
@@ -44,6 +47,12 @@ You should see:
 ```
 
 ## Step 2: Configure Claude Desktop
+
+**Before proceeding**: Verify that Node.js and npx are installed by running:
+- **Windows (PowerShell)**: `node -v; npm -v; npx -v`
+- **macOS/Linux**: `node -v && npm -v && npx -v`
+
+If any command is not found, install Node.js from [nodejs.org](https://nodejs.org/) first. See the [Troubleshooting section](#npx-is-not-recognized-error-on-windows) if needed.
 
 ### Locate the Configuration File
 
@@ -161,6 +170,37 @@ After saving the configuration file, completely quit and restart Claude Desktop 
 If configured correctly, Claude will use the MCP tools from your containerized server.
 
 ## Troubleshooting
+
+### "npx is not recognized" Error on Windows
+
+**Problem**: When trying to run `npx` commands, you see "'npx' is not recognized as an internal or external command" or Claude Desktop shows "Server disconnected" errors.
+
+**Cause**: Node.js and npm are not installed or not in your system PATH.
+
+**Solution**:
+
+1. **Install Node.js** (includes npm and npx):
+   - Download the LTS version from [nodejs.org](https://nodejs.org/)
+   - Run the installer and ensure "Add to PATH" is selected
+   - **Important**: Restart your terminal/command prompt after installation
+
+2. **Verify Installation**:
+   Open a new Command Prompt or PowerShell window and run:
+   ```powershell
+   node -v
+   npm -v
+   npx -v
+   ```
+   You should see version numbers for each command.
+
+3. **If commands still aren't recognized**:
+   - Verify Node.js is in your PATH:
+     - Open "Environment Variables" in Windows Settings
+     - Check that `C:\Program Files\nodejs\` is in your PATH
+   - Restart your computer if needed
+   - Try running Command Prompt as Administrator
+
+4. **After Node.js is installed**, restart Claude Desktop and the MCP server should connect successfully.
 
 ### "Cannot read properties of undefined" Error on Windows
 
