@@ -5,6 +5,7 @@ A Model Context Protocol (MCP) server built with ASP.NET Core that provides tool
 ## Features
 
 - **MCP Server**: ASP.NET Core application using the official [ModelContextProtocol.AspNetCore](https://www.nuget.org/packages/ModelContextProtocol.AspNetCore) SDK
+- **Native stdio Bridge**: Pure .NET bridge for Claude Desktop - no Node.js required
 - **HTTPS Support**: Flexible certificate management with support for local dev certs, persistent container-generated certs, and production certificates
 - **Shell Command Execution**: Execute CLI commands (dotnet, git, ripgrep, jq, etc.) in a sandboxed environment
 - **File System Tools**: Check file existence and analyze project structure
@@ -110,6 +111,7 @@ headless-ide-mcp/
 ├── src/
 │   ├── HeadlessIdeMcp.Server/          # ASP.NET Core MCP server
 │   ├── HeadlessIdeMcp.Core/            # Core tool logic
+│   ├── HeadlessIdeMcp.Bridge/          # Native stdio-to-HTTP bridge for Claude Desktop
 │   ├── HeadlessIdeMcp.IntegrationTests/ # Integration tests
 │   └── Solution.sln                     # Main solution
 ├── sample-codebase/                     # Sample .NET solution for testing

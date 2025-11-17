@@ -77,11 +77,203 @@ Claude Desktop will connect directly to your HTTPS MCP server - no bridge needed
 
 ---
 
-## Method 2: stdio Bridge Proxy (Alternative)
+## Method 2: Native .NET Bridge (Recommended for stdio)
 
-**Note**: With HTTPS now supported, Method 1 is recommended. Use this method if you prefer the stdio bridge approach or need HTTP-only connectivity.
+**New!** We now provide a native .NET bridge that eliminates the need for Node.js. This is the recommended approach if you prefer stdio over HTTPS, or if the Remote MCP Connector is not available in your region.
 
 ### Architecture
+
+```
+Claude Desktop (stdio) 
+    ↓
+headless-ide-mcp-bridge (native .NET bridge)
+    ↓ HTTP/SSE
+Headless IDE MCP Server (HTTP/HTTPS) in Docker Container
+```
+
+### Benefits
+
+- ✅ **No Node.js required** - Pure .NET solution
+- ✅ **Self-contained** - Single executable with no dependencies
+- ✅ **Fast and lightweight** - Minimal overhead
+- ✅ **Cross-platform** - Works on Windows, macOS, and Linux
+- ✅ **Native integration** - Built specifically for this MCP server
+
+### Prerequisites
+
+- **Claude Desktop** installed ([download here](https://claude.ai/download))
+- **Docker Desktop** running
+- **Headless IDE MCP server** running in Docker
+- **Bridge executable** - Download from the [releases page](https://github.com/dazinator/headless-ide-mcp/releases) or build from source
+
+### Step 1: Download the Bridge
+
+Download the appropriate bridge executable for your platform from the [releases page](https://github.com/dazinator/headless-ide-mcp/releases):
+
+- **Windows (x64)**: `headless-ide-mcp-bridge-win-x64.zip`
+- **Windows (ARM64)**: `headless-ide-mcp-bridge-win-arm64.zip`
+- **macOS (Intel)**: `headless-ide-mcp-bridge-osx-x64.tar.gz`
+- **macOS (Apple Silicon)**: `headless-ide-mcp-bridge-osx-arm64.tar.gz`
+- **Linux (x64)**: `headless-ide-mcp-bridge-linux-x64.tar.gz`
+- **Linux (ARM64)**: `headless-ide-mcp-bridge-linux-arm64.tar.gz`
+
+Extract the archive and note the path to the executable.
+
+**Alternatively**, build from source:
+```bash
+cd src/HeadlessIdeMcp.Bridge
+dotnet publish -c Release -r <your-runtime-id> --self-contained -p:PublishSingleFile=true
+# Executable will be in bin/Release/net8.0/<runtime-id>/publish/
+```
+
+### Step 2: Start the Headless IDE MCP Server
+
+Ensure the MCP server is running with Docker Compose:
+
+```bash
+docker-compose up -d
+```
+
+The server will be available at `http://localhost:5000` (HTTP) or `https://localhost:5001` (HTTPS)
+
+Verify it's running:
+```bash
+curl http://localhost:5000/health
+```
+
+You should see:
+```json
+{"status":"healthy","codeBasePath":"/workspace"}
+```
+
+### Step 3: Configure Claude Desktop
+
+Edit your Claude Desktop configuration file to use the native bridge.
+
+#### Locate the Configuration File
+
+The Claude Desktop configuration file location depends on your operating system:
+
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **Linux**: `~/.config/Claude/claude_desktop_config.json`
+
+**Tip**: You can also access this file via Claude Desktop's menu: `Settings > Developer > Edit Config`
+
+#### Add the MCP Server Configuration
+
+**For Windows:**
+```json
+{
+  "mcpServers": {
+    "headless-ide": {
+      "command": "C:\\path\\to\\headless-ide-mcp-bridge.exe",
+      "args": ["http://localhost:5000/"]
+    }
+  }
+}
+```
+
+**For macOS:**
+```json
+{
+  "mcpServers": {
+    "headless-ide": {
+      "command": "/path/to/headless-ide-mcp-bridge",
+      "args": ["http://localhost:5000/"]
+    }
+  }
+}
+```
+
+**For Linux:**
+```json
+{
+  "mcpServers": {
+    "headless-ide": {
+      "command": "/path/to/headless-ide-mcp-bridge",
+      "args": ["http://localhost:5000/"]
+    }
+  }
+}
+```
+
+**Configuration Notes:**
+- Replace `/path/to/headless-ide-mcp-bridge` with the actual path to the bridge executable
+- You can use either `http://localhost:5000/` or `https://localhost:5001/`
+- The trailing `/` is required
+- For HTTPS with self-signed certificates, use HTTP or configure certificate trust
+
+### Step 4: Restart Claude Desktop
+
+After saving the configuration file, completely quit and restart Claude Desktop for the changes to take effect.
+
+### Step 5: Verify the Connection
+
+1. Open Claude Desktop
+2. Start a new conversation
+3. Look for the tool icon (🔧) or check if MCP tools are available
+4. Try using one of the Headless IDE tools:
+
+**Example prompts to test:**
+- "Can you check if the file `SampleProject1/Calculator.cs` exists?"
+- "What tools are available in the shell environment?"
+- "Run `dotnet --version` in the workspace"
+
+If configured correctly, Claude will use the MCP tools from your containerized server through the native bridge.
+
+### Troubleshooting
+
+#### Bridge doesn't start
+
+1. **Check the executable path** is correct in the configuration
+2. **Verify permissions** - ensure the bridge executable is executable:
+   - **macOS/Linux**: `chmod +x /path/to/headless-ide-mcp-bridge`
+   - **Windows**: Right-click → Properties → Unblock if the file is blocked
+3. **Test the bridge manually**:
+   ```bash
+   echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | /path/to/headless-ide-mcp-bridge http://localhost:5000/
+   ```
+   You should see a JSON response with the list of tools
+
+#### Connection errors
+
+1. **Verify the server is running**:
+   ```bash
+   curl http://localhost:5000/health
+   ```
+
+2. **Check bridge logs** - The bridge logs to stderr. To see logs:
+   - **Claude Desktop logs**: Settings → Developer → View Logs
+   - **Manual test with logs**:
+     ```bash
+     echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | /path/to/headless-ide-mcp-bridge http://localhost:5000/ 2> bridge.log
+     cat bridge.log
+     ```
+
+3. **Test server connectivity** from the bridge:
+   ```bash
+   /path/to/headless-ide-mcp-bridge http://localhost:5000/ 2>&1 | grep "health check"
+   # Should show: [MCP Bridge] Server health check passed
+   ```
+
+#### "Server disconnected" Error
+
+This usually means:
+1. The Docker container isn't running - run `docker ps` to verify
+2. The server URL in the configuration is incorrect
+3. The bridge can't connect to the server
+
+**Fix:**
+1. Ensure Docker container is running: `docker-compose up -d`
+2. Verify the URL in claude_desktop_config.json is correct
+3. Test the server: `curl http://localhost:5000/health`
+
+---
+
+## Method 3: Node.js Bridge (Legacy)
+
+**Note**: With the native .NET bridge now available (Method 2), this Node.js-based approach is no longer necessary. Use Method 2 instead for a simpler setup with no Node.js dependency.
 
 ### Architecture
 
