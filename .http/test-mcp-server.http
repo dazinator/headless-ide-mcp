@@ -7,6 +7,7 @@ Accept: application/json
 ### List MCP Tools
 POST http://localhost:5000/
 Content-Type: application/json
+Accept: application/json, text/event-stream
 
 {
   "jsonrpc": "2.0",
@@ -19,6 +20,7 @@ Content-Type: application/json
 ### Call CheckFileExists Tool - Existing File
 POST http://localhost:5000/
 Content-Type: application/json
+Accept: application/json, text/event-stream
 
 {
   "jsonrpc": "2.0",
@@ -37,6 +39,7 @@ Content-Type: application/json
 ### Call CheckFileExists Tool - Non-existing File
 POST http://localhost:5000/
 Content-Type: application/json
+Accept: application/json, text/event-stream
 
 {
   "jsonrpc": "2.0",
@@ -55,6 +58,7 @@ Content-Type: application/json
 ### Call CheckFileExists Tool - Solution File
 POST http://localhost:5000/
 Content-Type: application/json
+Accept: application/json, text/event-stream
 
 {
   "jsonrpc": "2.0",
@@ -73,6 +77,7 @@ Content-Type: application/json
 ### Shell Execute - Get .NET Version
 POST http://localhost:5000/
 Content-Type: application/json
+Accept: application/json, text/event-stream
 
 {
   "jsonrpc": "2.0",
@@ -92,6 +97,7 @@ Content-Type: application/json
 ### Shell Execute - Search for .cs files with ripgrep
 POST http://localhost:5000/
 Content-Type: application/json
+Accept: application/json, text/event-stream
 
 {
   "jsonrpc": "2.0",
@@ -111,6 +117,7 @@ Content-Type: application/json
 ### Shell Execute - List directory tree
 POST http://localhost:5000/
 Content-Type: application/json
+Accept: application/json, text/event-stream
 
 {
   "jsonrpc": "2.0",
@@ -130,6 +137,7 @@ Content-Type: application/json
 ### Shell Execute JSON - Parse package.json with jq
 POST http://localhost:5000/
 Content-Type: application/json
+Accept: application/json, text/event-stream
 
 {
   "jsonrpc": "2.0",
@@ -149,6 +157,7 @@ Content-Type: application/json
 ### Shell Get Available Tools
 POST http://localhost:5000/
 Content-Type: application/json
+Accept: application/json, text/event-stream
 
 {
   "jsonrpc": "2.0",
