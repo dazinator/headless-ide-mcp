@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  headless-ide-mcp:
-    image: headless-ide-mcp:dev
-    container_name: headless-ide-mcp-server
+  devbuddy:
+    image: devbuddy:dev
+    container_name: devbuddy-server
     build:
       context: .
       dockerfile: Dockerfile
@@ -64,4 +64,4 @@ networks:
 
 volumes:
   https-certs:
-    name: headless-ide-mcp-certs
+    name: devbuddy-certs

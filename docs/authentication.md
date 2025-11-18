@@ -2,7 +2,7 @@
 
 ## API Key Authentication
 
-The Headless IDE MCP server supports optional API key authentication for securing access to the MCP endpoints.
+The DevBuddy server supports optional API key authentication for securing access to the MCP endpoints.
 
 ### Configuration
 
@@ -32,7 +32,7 @@ export Authentication__ApiKey__Key="your-secret-api-key-here"
 **Docker Compose:**
 ```yaml
 services:
-  headless-ide-mcp:
+  devbuddy:
     environment:
       - Authentication__ApiKey__Enabled=true
       - Authentication__ApiKey__Key=your-secret-api-key-here
@@ -128,7 +128,7 @@ Monitor these logs for potential security issues or brute-force attempts.
 
 ### Thread Safety
 
-The Headless IDE MCP server is **fully thread-safe** and designed to handle multiple concurrent requests.
+The DevBuddy server is **fully thread-safe** and designed to handle multiple concurrent requests.
 
 **Key Points:**
 

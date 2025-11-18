@@ -1,7 +1,7 @@
-using HeadlessIdeMcp.Core.ProcessExecution;
+using DevBuddy.Core.ProcessExecution;
 using Shouldly;
 
-namespace HeadlessIdeMcp.IntegrationTests.ProcessExecution;
+namespace DevBuddy.IntegrationTests.ProcessExecution;
 
 /// <summary>
 /// Integration tests for CommandExecutionService

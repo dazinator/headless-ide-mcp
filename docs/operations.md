@@ -1,6 +1,6 @@
 # Operations Guide
 
-This document provides operational guidance for running, monitoring, and maintaining the Headless IDE MCP server in production.
+This document provides operational guidance for running, monitoring, and maintaining the DevBuddy server in production.
 
 ## Table of Contents
 
@@ -72,7 +72,7 @@ Configuration is managed through `appsettings.json` and `appsettings.{Environmen
     "LogLevel": {
       "Default": "Information",
       "Microsoft.AspNetCore": "Warning",
-      "HeadlessIdeMcp.Core.ProcessExecution.CommandExecutionService": "Information"
+      "DevBuddy.Core.ProcessExecution.CommandExecutionService": "Information"
     }
   },
   "AllowedHosts": "*",
@@ -167,26 +167,26 @@ reservations:
 
 ```bash
 # Real-time stats
-docker stats headless-ide-mcp-server
+docker stats devbuddy-server
 
 # One-time snapshot
-docker stats --no-stream headless-ide-mcp-server
+docker stats --no-stream devbuddy-server
 ```
 
 Example output:
 ```
 CONTAINER ID   NAME                     CPU %     MEM USAGE / LIMIT   MEM %
-a1b2c3d4e5f6   headless-ide-mcp-server  5.23%     256MiB / 1GiB      25.00%
+a1b2c3d4e5f6   devbuddy-server  5.23%     256MiB / 1GiB      25.00%
 ```
 
 #### Check Resource Limit Events
 
 ```bash
 # View OOM events
-docker inspect headless-ide-mcp-server | grep -i oom
+docker inspect devbuddy-server | grep -i oom
 
 # View restart count
-docker inspect headless-ide-mcp-server --format='{{.RestartCount}}'
+docker inspect devbuddy-server --format='{{.RestartCount}}'
 ```
 
 ### OOM (Out of Memory) Handling
@@ -231,7 +231,7 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 
 Check health status:
 ```bash
-docker inspect --format='{{.State.Health.Status}}' headless-ide-mcp-server
+docker inspect --format='{{.State.Health.Status}}' devbuddy-server
 ```
 
 ### Log Monitoring
@@ -240,13 +240,13 @@ docker inspect --format='{{.State.Health.Status}}' headless-ide-mcp-server
 
 ```bash
 # Follow logs
-docker-compose logs -f headless-ide-mcp
+docker-compose logs -f devbuddy
 
 # Last 100 lines
-docker-compose logs --tail=100 headless-ide-mcp
+docker-compose logs --tail=100 devbuddy
 
 # Since specific time
-docker-compose logs --since=1h headless-ide-mcp
+docker-compose logs --since=1h devbuddy
 ```
 
 #### Filter Audit Logs
@@ -254,7 +254,7 @@ docker-compose logs --since=1h headless-ide-mcp
 Audit logs use structured logging. Filter by correlation ID:
 
 ```bash
-docker-compose logs headless-ide-mcp | grep "CorrelationId: a1b2c3d4"
+docker-compose logs devbuddy | grep "CorrelationId: a1b2c3d4"
 ```
 
 ### Metrics Collection
@@ -282,7 +282,7 @@ Audit logs are written in structured format for easy parsing and analysis.
 #### Log Entry Example
 
 ```
-info: HeadlessIdeMcp.Core.ProcessExecution.CommandExecutionService[0]
+info: DevBuddy.Core.ProcessExecution.CommandExecutionService[0]
       Command execution Completed: dotnet --version (CorrelationId: abc-123, User: client-1, ExitCode: 0, Duration: 250ms)
 ```
 
@@ -291,19 +291,19 @@ info: HeadlessIdeMcp.Core.ProcessExecution.CommandExecutionService[0]
 #### Find All Failed Commands
 
 ```bash
-docker-compose logs headless-ide-mcp | grep "Status: Failed"
+docker-compose logs devbuddy | grep "Status: Failed"
 ```
 
 #### Find Commands by User
 
 ```bash
-docker-compose logs headless-ide-mcp | grep "User: mcp-client"
+docker-compose logs devbuddy | grep "User: mcp-client"
 ```
 
 #### Find Long-Running Commands
 
 ```bash
-docker-compose logs headless-ide-mcp | grep "Duration:" | awk '{print $(NF-1), $NF}' | sort -n
+docker-compose logs devbuddy | grep "Duration:" | awk '{print $(NF-1), $NF}' | sort -n
 ```
 
 ### Log Retention
@@ -337,7 +337,7 @@ logging:
   driver: fluentd
   options:
     fluentd-address: localhost:24224
-    tag: headless-ide-mcp
+    tag: devbuddy
 ```
 
 **Option 2: Syslog**
@@ -406,7 +406,7 @@ readinessProbe:
 
 **Check logs:**
 ```bash
-docker-compose logs headless-ide-mcp
+docker-compose logs devbuddy
 ```
 
 **Common causes:**
@@ -475,7 +475,7 @@ Profile command execution:
 export ASPNETCORE_ENVIRONMENT=Development
 
 # Watch execution times in logs
-docker-compose logs -f headless-ide-mcp | grep "ExecutionTimeMs"
+docker-compose logs -f devbuddy | grep "ExecutionTimeMs"
 ```
 
 ## Maintenance
@@ -518,7 +518,7 @@ docker-compose logs -f
 
 ```bash
 # Edit configuration
-vim src/HeadlessIdeMcp.Server/appsettings.json
+vim src/DevBuddy.Server/appsettings.json
 
 # Rebuild and restart
 docker-compose up -d --build
@@ -531,7 +531,7 @@ docker-compose up -d --build
 ```bash
 # Backup configuration
 tar -czf config-backup-$(date +%Y%m%d).tar.gz \
-  src/HeadlessIdeMcp.Server/appsettings*.json \
+  src/DevBuddy.Server/appsettings*.json \
   docker-compose.yml
 ```
 
@@ -549,7 +549,7 @@ For higher load, consider:
 **Horizontal Scaling**: Run multiple instances with load balancer
 ```yaml
 services:
-  headless-ide-mcp:
+  devbuddy:
     deploy:
       replicas: 3
 ```

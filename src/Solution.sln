@@ -12,13 +12,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\.http\test-mcp-server.http = ..\.http\test-mcp-server.http
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HeadlessIdeMcp.Core", "HeadlessIdeMcp.Core\HeadlessIdeMcp.Core.csproj", "{5E32A754-147F-4412-BD44-778FFB2147D7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevBuddy.Core", "DevBuddy.Core\DevBuddy.Core.csproj", "{5E32A754-147F-4412-BD44-778FFB2147D7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HeadlessIdeMcp.Server", "HeadlessIdeMcp.Server\HeadlessIdeMcp.Server.csproj", "{EBC1D19C-48BC-45CE-B928-FC8CF0B9782C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevBuddy.Server", "DevBuddy.Server\DevBuddy.Server.csproj", "{EBC1D19C-48BC-45CE-B928-FC8CF0B9782C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HeadlessIdeMcp.IntegrationTests", "HeadlessIdeMcp.IntegrationTests\HeadlessIdeMcp.IntegrationTests.csproj", "{296D227F-B752-4A74-BC67-60D9AA585F79}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevBuddy.IntegrationTests", "DevBuddy.IntegrationTests\DevBuddy.IntegrationTests.csproj", "{296D227F-B752-4A74-BC67-60D9AA585F79}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HeadlessIdeMcp.Bridge", "HeadlessIdeMcp.Bridge\HeadlessIdeMcp.Bridge.csproj", "{856F7C34-C05E-4F26-9D7E-2F19DED574E1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevBuddy.Bridge", "DevBuddy.Bridge\DevBuddy.Bridge.csproj", "{856F7C34-C05E-4F26-9D7E-2F19DED574E1}"
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "..\docker-compose.dcproj", "{8FC8A8AB-D123-4E5C-9876-543210FEDCBA}"
 EndProject

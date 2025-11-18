@@ -1,4 +1,4 @@
-# Parent Tracking Issue: Implement CLI-First Headless IDE MCP Architecture
+# Parent Tracking Issue: Implement CLI-First DevBuddy Architecture
 
 **Status:** 📋 Ready to Create  
 **Type:** Epic/Parent Issue  
@@ -8,7 +8,7 @@
 
 ## Overview
 
-Implement the CLI-first Headless IDE MCP architecture as described in the design documents. This will provide AI agents with a powerful, secure, containerized development environment comparable to GitHub Actions runners.
+Implement the CLI-first DevBuddy architecture as described in the design documents. This will provide AI agents with a powerful, secure, containerized development environment comparable to GitHub Actions runners.
 
 ## Background
 

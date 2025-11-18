@@ -1,4 +1,4 @@
-# Implementation Plan: CLI-First Headless IDE MCP
+# Implementation Plan: CLI-First DevBuddy
 
 **Date:** 2025-11-15 (Updated)  
 **Version:** 2.0 (Simplified with DevContainer)  
@@ -9,7 +9,7 @@
 
 ## Overview
 
-This document breaks down the implementation of the simplified CLI-first Headless IDE MCP architecture into concrete, actionable sub-issues. Each sub-issue represents a complete unit of work that can be implemented as a separate PR.
+This document breaks down the implementation of the simplified CLI-first DevBuddy architecture into concrete, actionable sub-issues. Each sub-issue represents a complete unit of work that can be implemented as a separate PR.
 
 **Simplifications in v2.0:**
 - Using DevContainer base image (reduces configuration effort)
@@ -54,7 +54,7 @@ DEFERRED (separate future work items):
 **Title:** Implement process execution service with security controls
 
 **Description:**
-Add the `CommandExecutionService` class to `HeadlessIdeMcp.Core` to enable secure command execution in sandboxed environment.
+Add the `CommandExecutionService` class to `DevBuddy.Core` to enable secure command execution in sandboxed environment.
 
 **Acceptance Criteria:**
 - [ ] `ICommandExecutionService` interface defined
@@ -71,11 +71,11 @@ Add the `CommandExecutionService` class to `HeadlessIdeMcp.Core` to enable secur
 - [ ] All tests passing
 
 **Files to Create/Modify:**
-- `src/HeadlessIdeMcp.Core/ProcessExecution/ICommandExecutionService.cs` (NEW)
-- `src/HeadlessIdeMcp.Core/ProcessExecution/CommandExecutionService.cs` (NEW)
-- `src/HeadlessIdeMcp.Core/ProcessExecution/ExecutionRequest.cs` (NEW)
-- `src/HeadlessIdeMcp.Core/ProcessExecution/ExecutionResult.cs` (NEW)
-- `src/HeadlessIdeMcp.Core/ProcessExecution/CommandExecutionOptions.cs` (NEW)
+- `src/DevBuddy.Core/ProcessExecution/ICommandExecutionService.cs` (NEW)
+- `src/DevBuddy.Core/ProcessExecution/CommandExecutionService.cs` (NEW)
+- `src/DevBuddy.Core/ProcessExecution/ExecutionRequest.cs` (NEW)
+- `src/DevBuddy.Core/ProcessExecution/ExecutionResult.cs` (NEW)
+- `src/DevBuddy.Core/ProcessExecution/CommandExecutionOptions.cs` (NEW)
 
 **Implementation Guide:**
 - Use POC code from `docs/design/poc/poc-code/CommandExecutionService.cs`
@@ -118,9 +118,9 @@ Add MCP tool implementations that expose the CommandExecutionService to AI agent
 - [ ] All tests passing
 
 **Files to Create/Modify:**
-- `src/HeadlessIdeMcp.Server/Tools/ShellTools.cs` (NEW)
-- `src/HeadlessIdeMcp.Server/Program.cs` (MODIFY)
-- `src/HeadlessIdeMcp.IntegrationTests/ShellToolsTests.cs` (NEW)
+- `src/DevBuddy.Server/Tools/ShellTools.cs` (NEW)
+- `src/DevBuddy.Server/Program.cs` (MODIFY)
+- `src/DevBuddy.IntegrationTests/ShellToolsTests.cs` (NEW)
 
 **Implementation Guide:**
 - Use POC code from `docs/design/poc/poc-code/ShellTools.cs`
@@ -229,7 +229,7 @@ Create integration tests that validate shell execution works correctly in the ac
 - [ ] CI/CD integration configured
 
 **Files to Create/Modify:**
-- `src/HeadlessIdeMcp.IntegrationTests/ShellExecutionIntegrationTests.cs` (NEW)
+- `src/DevBuddy.IntegrationTests/ShellExecutionIntegrationTests.cs` (NEW)
 - `docker-compose.test.yml` (NEW)
 - `.github/workflows/ci.yml` (MODIFY)
 
@@ -356,8 +356,8 @@ Add production-grade security controls to prevent information disclosure and res
 - [ ] Security documentation updated
 
 **Files to Create/Modify:**
-- `src/HeadlessIdeMcp.Core/ProcessExecution/CommandExecutionService.cs` (MODIFY)
-- `src/HeadlessIdeMcp.Server/appsettings.json` (MODIFY)
+- `src/DevBuddy.Core/ProcessExecution/CommandExecutionService.cs` (MODIFY)
+- `src/DevBuddy.Server/appsettings.json` (MODIFY)
 - `docker-compose.yml` (MODIFY)
 - `docs/security.md` (MODIFY)
 
@@ -407,8 +407,8 @@ Implement comprehensive audit logging to track all command executions for securi
 - [ ] Documentation updated
 
 **Files to Create/Modify:**
-- `src/HeadlessIdeMcp.Core/ProcessExecution/CommandExecutionService.cs` (MODIFY)
-- `src/HeadlessIdeMcp.Server/appsettings.json` (MODIFY)
+- `src/DevBuddy.Core/ProcessExecution/CommandExecutionService.cs` (MODIFY)
+- `src/DevBuddy.Server/appsettings.json` (MODIFY)
 - `docs/operations.md` (NEW)
 
 **Log Format:**
@@ -571,8 +571,8 @@ Improve the shell_execute_json tool with better JSON validation, error messages,
 - [ ] All tests passing
 
 **Files to Create/Modify:**
-- `src/HeadlessIdeMcp.Server/Tools/ShellTools.cs` (MODIFY)
-- `src/HeadlessIdeMcp.IntegrationTests/ShellToolsTests.cs` (MODIFY)
+- `src/DevBuddy.Server/Tools/ShellTools.cs` (MODIFY)
+- `src/DevBuddy.IntegrationTests/ShellToolsTests.cs` (MODIFY)
 - `docs/usage-guide.md` (MODIFY)
 
 **Enhancements:**
@@ -614,8 +614,8 @@ Enhance error handling to provide clear, actionable error messages with troubles
 - [ ] All error scenarios tested
 
 **Files to Create/Modify:**
-- `src/HeadlessIdeMcp.Core/ProcessExecution/CommandExecutionService.cs` (MODIFY)
-- `src/HeadlessIdeMcp.Server/Tools/ShellTools.cs` (MODIFY)
+- `src/DevBuddy.Core/ProcessExecution/CommandExecutionService.cs` (MODIFY)
+- `src/DevBuddy.Server/Tools/ShellTools.cs` (MODIFY)
 - `docs/troubleshooting.md` (NEW)
 - `docs/error-codes.md` (NEW)
 
@@ -675,8 +675,8 @@ Add comprehensive metrics collection to monitor system health, performance, and 
 7. Tool usage (which tools used most)
 
 **Files to Create/Modify:**
-- `src/HeadlessIdeMcp.Server/Program.cs` (MODIFY)
-- `src/HeadlessIdeMcp.Server/Middleware/MetricsMiddleware.cs` (NEW)
+- `src/DevBuddy.Server/Program.cs` (MODIFY)
+- `src/DevBuddy.Server/Middleware/MetricsMiddleware.cs` (NEW)
 - `docs/operations.md` (MODIFY)
 
 **Implementation Guide:**
@@ -854,7 +854,7 @@ FUTURE: Higher-level tools, LSP (separate work items)
 ## Next Steps
 
 1. **Create Parent Tracking Issue:**
-   - Title: "Implement CLI-First Headless IDE MCP Architecture"
+   - Title: "Implement CLI-First DevBuddy Architecture"
    - Link to this implementation plan
    - Create milestones in GitHub
 

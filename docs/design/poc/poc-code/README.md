@@ -6,7 +6,7 @@
 
 ## Overview
 
-This directory contains proof-of-concept implementations validating the critical assumptions of the CLI-first headless IDE MCP architecture. Each POC addresses specific risks identified in `fail-fast-opportunities.md`.
+This directory contains proof-of-concept implementations validating the critical assumptions of the CLI-first DevBuddy MCP architecture. Each POC addresses specific risks identified in `fail-fast-opportunities.md`.
 
 ---
 
@@ -210,10 +210,10 @@ The test suite (`CommandExecutionServiceTests.cs`) validates:
 
 ```bash
 # Build the enhanced container
-docker build -f docs/design/poc-code/Dockerfile.enhanced -t headless-ide-mcp:enhanced .
+docker build -f docs/design/poc-code/Dockerfile.enhanced -t devbuddy:enhanced .
 
 # Run with tools available
-docker run -v ./sample-codebase:/workspace:ro headless-ide-mcp:enhanced
+docker run -v ./sample-codebase:/workspace:ro devbuddy:enhanced
 
 # Test tool availability
 curl http://localhost:8080/
@@ -473,11 +473,11 @@ Console.WriteLine($"Output: {result.Stdout}");
 
 ```bash
 # Build enhanced container
-cd /home/runner/work/headless-ide-mcp/headless-ide-mcp
-docker build -f docs/design/poc-code/Dockerfile.enhanced -t headless-ide-mcp:poc .
+cd /home/runner/work/devbuddy/devbuddy
+docker build -f docs/design/poc-code/Dockerfile.enhanced -t devbuddy:poc .
 
 # Run container
-docker run -p 5000:8080 -v ./sample-codebase:/workspace:ro headless-ide-mcp:poc
+docker run -p 5000:8080 -v ./sample-codebase:/workspace:ro devbuddy:poc
 
 # Test tools
 curl -X POST http://localhost:5000/ \

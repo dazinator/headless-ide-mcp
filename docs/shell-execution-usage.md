@@ -1,6 +1,6 @@
 # Shell Execution Usage Guide
 
-This guide explains how to use the shell execution tools provided by the Headless IDE MCP server.
+This guide explains how to use the shell execution tools provided by the DevBuddy server.
 
 ## Overview
 

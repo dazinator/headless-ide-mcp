@@ -17,13 +17,13 @@ Claude Desktop only supports MCP servers that communicate over **stdio**, not HT
 
 ```bash
 # Connect to local MCP server (HTTP)
-headless-ide-mcp-bridge http://localhost:5000/
+devbuddy-bridge http://localhost:5000/
 
 # Connect to local MCP server (HTTPS)
-headless-ide-mcp-bridge https://localhost:5001/
+devbuddy-bridge https://localhost:5001/
 
 # Connect to remote MCP server
-headless-ide-mcp-bridge https://myserver.example.com/
+devbuddy-bridge https://myserver.example.com/
 ```
 
 The bridge reads JSON-RPC messages from stdin and writes responses to stdout, following the MCP protocol specification.
@@ -37,7 +37,7 @@ Configure Claude Desktop to launch the bridge as an MCP server:
 {
   "mcpServers": {
     "headless-ide": {
-      "command": "C:\\path\\to\\headless-ide-mcp-bridge.exe",
+      "command": "C:\\path\\to\\devbuddy-bridge.exe",
       "args": ["http://localhost:5000/"]
     }
   }
@@ -49,7 +49,7 @@ Configure Claude Desktop to launch the bridge as an MCP server:
 {
   "mcpServers": {
     "headless-ide": {
-      "command": "/path/to/headless-ide-mcp-bridge",
+      "command": "/path/to/devbuddy-bridge",
       "args": ["http://localhost:5000/"]
     }
   }
@@ -129,7 +129,7 @@ The bridge logs diagnostic messages to **stderr** to avoid interfering with the 
 
 ```bash
 # Redirect stderr to a file
-headless-ide-mcp-bridge http://localhost:5000/ 2> bridge.log
+devbuddy-bridge http://localhost:5000/ 2> bridge.log
 ```
 
 Sample log output:

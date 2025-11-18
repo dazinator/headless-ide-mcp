@@ -1,4 +1,4 @@
-# Viability Assessment: CLI-First Headless IDE MCP Architecture
+# Viability Assessment: CLI-First DevBuddy Architecture
 
 **Date:** 2025-11-14  
 **Status:** Initial Assessment  

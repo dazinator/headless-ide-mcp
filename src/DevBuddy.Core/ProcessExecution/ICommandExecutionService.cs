@@ -1,4 +1,4 @@
-namespace HeadlessIdeMcp.Core.ProcessExecution;
+namespace DevBuddy.Core.ProcessExecution;
 
 /// <summary>
 /// Service for executing shell commands safely in a sandboxed environment

@@ -1,10 +1,10 @@
-# Getting Started with Headless IDE MCP
+# Getting Started with DevBuddy
 
 This guide will help you get started with the Headless IDE Model Context Protocol (MCP) server.
 
 ## Overview
 
-The Headless IDE MCP server is an ASP.NET Core application that provides MCP tools for analyzing .NET codebases. It uses the [ModelContextProtocol.AspNetCore](https://www.nuget.org/packages/ModelContextProtocol.AspNetCore) library to expose tools that can be consumed by AI assistants and other MCP clients.
+The DevBuddy server is an ASP.NET Core application that provides MCP tools for analyzing .NET codebases. It uses the [ModelContextProtocol.AspNetCore](https://www.nuget.org/packages/ModelContextProtocol.AspNetCore) library to expose tools that can be consumed by AI assistants and other MCP clients.
 
 **Want to use this with Claude Desktop?** See the [Claude Desktop Setup Guide](claude-desktop-setup.md) for step-by-step instructions on connecting Claude Desktop to this server.
 
@@ -17,7 +17,7 @@ The Headless IDE MCP server is an ASP.NET Core application that provides MCP too
 ## Project Structure
 
 ```
-headless-ide-mcp/
+devbuddy/
 ├── src/
 │   ├── HeadlessIdeMcp.Server/          # ASP.NET Core MCP server
 │   ├── HeadlessIdeMcp.Core/            # Core tool logic
@@ -167,7 +167,7 @@ The integration tests run against the actual file system with no mocked dependen
 To build the Docker image manually:
 
 ```bash
-docker build -t headless-ide-mcp:dev .
+docker build -t devbuddy:dev .
 ```
 
 ## Configuration
@@ -240,7 +240,7 @@ This is **not a security feature** but standard JSON encoding. When the JSON is 
 If the container cannot see the sample codebase:
 1. Check that Docker Desktop has file sharing enabled for the project directory
 2. Verify the volume mount path in `docker-compose.yml`
-3. Check container logs: `docker-compose logs headless-ide-mcp`
+3. Check container logs: `docker-compose logs devbuddy`
 
 ### MCP endpoint returns 404
 

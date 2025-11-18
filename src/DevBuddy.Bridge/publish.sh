@@ -51,13 +51,13 @@ for PLATFORM in "${PLATFORMS[@]}"; do
         # Windows: create .zip
         echo "Creating $PLATFORM.zip..."
         cd "$PLATFORM"
-        zip -q "../headless-ide-mcp-bridge-$PLATFORM.zip" headless-ide-mcp-bridge.exe
+        zip -q "../devbuddy-bridge-$PLATFORM.zip" devbuddy-bridge.exe
         cd ..
     else
         # Unix: create .tar.gz
         echo "Creating $PLATFORM.tar.gz..."
         cd "$PLATFORM"
-        tar -czf "../headless-ide-mcp-bridge-$PLATFORM.tar.gz" headless-ide-mcp-bridge
+        tar -czf "../devbuddy-bridge-$PLATFORM.tar.gz" devbuddy-bridge
         cd ..
     fi
 done

@@ -24,7 +24,7 @@ This document describes how to test the MCP Bridge locally.
 
 ```bash
 echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}}}' | \
-  ./bin/Debug/net8.0/linux-x64/headless-ide-mcp-bridge http://localhost:8080/ 2>/dev/null | jq .
+  ./bin/Debug/net8.0/linux-x64/devbuddy-bridge http://localhost:8080/ 2>/dev/null | jq .
 ```
 
 **Expected Output:**
@@ -52,7 +52,7 @@ echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":
 
 ```bash
 echo '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' | \
-  ./bin/Debug/net8.0/linux-x64/headless-ide-mcp-bridge http://localhost:8080/ 2>/dev/null | jq .
+  ./bin/Debug/net8.0/linux-x64/devbuddy-bridge http://localhost:8080/ 2>/dev/null | jq .
 ```
 
 **Expected Output:**
@@ -91,7 +91,7 @@ echo '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' | \
 
 ```bash
 echo '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"shell_get_available_tools","arguments":{}}}' | \
-  ./bin/Debug/net8.0/linux-x64/headless-ide-mcp-bridge http://localhost:8080/ 2>/dev/null | jq .
+  ./bin/Debug/net8.0/linux-x64/devbuddy-bridge http://localhost:8080/ 2>/dev/null | jq .
 ```
 
 **Expected Output:**
@@ -116,7 +116,7 @@ The bridge logs diagnostic information to stderr. To view the logs:
 
 ```bash
 echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | \
-  ./bin/Debug/net8.0/linux-x64/headless-ide-mcp-bridge http://localhost:8080/ 2>&1 | grep "MCP Bridge"
+  ./bin/Debug/net8.0/linux-x64/devbuddy-bridge http://localhost:8080/ 2>&1 | grep "MCP Bridge"
 ```
 
 **Expected Log Output:**
@@ -146,7 +146,7 @@ To test the published single-file executable:
 2. Test the published executable:
    ```bash
    echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | \
-     ./bin/Release/net8.0/linux-x64/publish/headless-ide-mcp-bridge http://localhost:8080/ 2>/dev/null | jq .
+     ./bin/Release/net8.0/linux-x64/publish/devbuddy-bridge http://localhost:8080/ 2>/dev/null | jq .
    ```
 
 ## Troubleshooting
@@ -203,7 +203,7 @@ tests=(
 )
 
 for test in "${tests[@]}"; do
-    echo "$test" | ./bin/Debug/net8.0/linux-x64/headless-ide-mcp-bridge http://localhost:8080/ 2>/dev/null | jq -e . > /dev/null
+    echo "$test" | ./bin/Debug/net8.0/linux-x64/devbuddy-bridge http://localhost:8080/ 2>/dev/null | jq -e . > /dev/null
     echo "✓ Test passed"
 done
 

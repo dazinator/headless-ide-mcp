@@ -1,4 +1,4 @@
-namespace HeadlessIdeMcp.Core.ProcessExecution;
+namespace DevBuddy.Core.ProcessExecution;
 
 /// <summary>
 /// Result of a command execution

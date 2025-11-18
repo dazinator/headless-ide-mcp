@@ -1,6 +1,6 @@
 # Project Setup
 
-This document describes the architecture and setup of the Headless IDE MCP server project.
+This document describes the architecture and setup of the DevBuddy server project.
 
 ## Architecture
 
