@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Text;
 using Microsoft.Extensions.Logging;
 
-namespace HeadlessIdeMcp.Core.ProcessExecution;
+namespace DevBuddy.Core.ProcessExecution;
 
 /// <summary>
 /// Implementation of command execution service with security controls

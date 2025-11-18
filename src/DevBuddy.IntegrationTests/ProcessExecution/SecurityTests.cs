@@ -1,8 +1,8 @@
-using HeadlessIdeMcp.Core.ProcessExecution;
+using DevBuddy.Core.ProcessExecution;
 using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
 
-namespace HeadlessIdeMcp.IntegrationTests.ProcessExecution;
+namespace DevBuddy.IntegrationTests.ProcessExecution;
 
 /// <summary>
 /// Security tests for CommandExecutionService (Phase 2)

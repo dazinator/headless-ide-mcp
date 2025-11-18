@@ -6,7 +6,7 @@
     <ProjectGuid>8fc8a8ab-d123-4e5c-9876-543210fedcba</ProjectGuid>
     <DockerLaunchAction>LaunchBrowser</DockerLaunchAction>
     <DockerServiceUrl>{Scheme}://localhost:{ServicePort}/health</DockerServiceUrl>
-    <DockerServiceName>headless-ide-mcp</DockerServiceName>
+    <DockerServiceName>devbuddy</DockerServiceName>
   </PropertyGroup>
   <ItemGroup>
     <None Include="docker-compose.yml" />

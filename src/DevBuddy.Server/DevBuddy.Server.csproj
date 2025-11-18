@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\HeadlessIdeMcp.Core\HeadlessIdeMcp.Core.csproj" />
+    <ProjectReference Include="..\DevBuddy.Core\DevBuddy.Core.csproj" />
   </ItemGroup>
 
 </Project>

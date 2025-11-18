@@ -44,26 +44,26 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Copy solution and project files
-COPY ["src/HeadlessIdeMcp.Server/HeadlessIdeMcp.Server.csproj", "HeadlessIdeMcp.Server/"]
-COPY ["src/HeadlessIdeMcp.Core/HeadlessIdeMcp.Core.csproj", "HeadlessIdeMcp.Core/"]
+COPY ["src/DevBuddy.Server/DevBuddy.Server.csproj", "DevBuddy.Server/"]
+COPY ["src/DevBuddy.Core/DevBuddy.Core.csproj", "DevBuddy.Core/"]
 COPY ["src/Directory.Build.props", "./"]
 COPY ["src/Directory.Packages.props", "./"]
 COPY ["src/.editorconfig", "./"]
 COPY ["src/global.json", "./"]
 
 # Restore dependencies
-RUN dotnet restore "HeadlessIdeMcp.Server/HeadlessIdeMcp.Server.csproj"
+RUN dotnet restore "DevBuddy.Server/DevBuddy.Server.csproj"
 
 # Copy source code
-COPY src/HeadlessIdeMcp.Server/ HeadlessIdeMcp.Server/
-COPY src/HeadlessIdeMcp.Core/ HeadlessIdeMcp.Core/
+COPY src/DevBuddy.Server/ DevBuddy.Server/
+COPY src/DevBuddy.Core/ DevBuddy.Core/
 
 # Build the application
-RUN dotnet build "HeadlessIdeMcp.Server/HeadlessIdeMcp.Server.csproj" -c Release -o /app/build
+RUN dotnet build "DevBuddy.Server/DevBuddy.Server.csproj" -c Release -o /app/build
 
 # Publish stage
 FROM build AS publish
-RUN dotnet publish "HeadlessIdeMcp.Server/HeadlessIdeMcp.Server.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "DevBuddy.Server/DevBuddy.Server.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage - combine DevContainer base with published app
 FROM base AS final

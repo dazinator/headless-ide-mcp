@@ -1,8 +1,8 @@
-using HeadlessIdeMcp.Core;
+using DevBuddy.Core;
 using ModelContextProtocol.Server;
 using System.ComponentModel;
 
-namespace HeadlessIdeMcp.Server;
+namespace DevBuddy.Server;
 
 /// <summary>
 /// MCP tools for file system operations

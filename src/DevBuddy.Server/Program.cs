@@ -1,6 +1,6 @@
-using HeadlessIdeMcp.Core;
-using HeadlessIdeMcp.Core.ProcessExecution;
-using HeadlessIdeMcp.Server;
+using DevBuddy.Core;
+using DevBuddy.Core.ProcessExecution;
+using DevBuddy.Server;
 using ModelContextProtocol.Server;
 
 var builder = WebApplication.CreateBuilder(args);

@@ -1,4 +1,4 @@
-namespace HeadlessIdeMcp.Server;
+namespace DevBuddy.Server;
 
 /// <summary>
 /// Middleware for API key authentication

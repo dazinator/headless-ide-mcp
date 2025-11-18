@@ -1,8 +1,8 @@
-using HeadlessIdeMcp.Core.ProcessExecution;
-using HeadlessIdeMcp.Server;
+using DevBuddy.Core.ProcessExecution;
+using DevBuddy.Server;
 using Shouldly;
 
-namespace HeadlessIdeMcp.IntegrationTests.ProcessExecution;
+namespace DevBuddy.IntegrationTests.ProcessExecution;
 
 /// <summary>
 /// Integration tests for ShellTools MCP integration

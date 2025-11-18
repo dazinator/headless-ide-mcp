@@ -1,9 +1,9 @@
-using HeadlessIdeMcp.Core.ProcessExecution;
+using DevBuddy.Core.ProcessExecution;
 using ModelContextProtocol.Server;
 using System.ComponentModel;
 using System.Text.Json.Nodes;
 
-namespace HeadlessIdeMcp.Server;
+namespace DevBuddy.Server;
 
 /// <summary>
 /// MCP Shell Execution Tools

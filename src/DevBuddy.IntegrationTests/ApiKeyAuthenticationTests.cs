@@ -4,7 +4,7 @@ using System.Net.Http.Json;
 using Shouldly;
 using Microsoft.Extensions.Configuration;
 
-namespace HeadlessIdeMcp.IntegrationTests;
+namespace DevBuddy.IntegrationTests;
 
 /// <summary>
 /// Integration tests for API key authentication

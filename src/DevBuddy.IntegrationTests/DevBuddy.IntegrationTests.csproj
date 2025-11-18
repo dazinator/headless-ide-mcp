@@ -23,8 +23,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\HeadlessIdeMcp.Core\HeadlessIdeMcp.Core.csproj" />
-    <ProjectReference Include="..\HeadlessIdeMcp.Server\HeadlessIdeMcp.Server.csproj" />
+    <ProjectReference Include="..\DevBuddy.Core\DevBuddy.Core.csproj" />
+    <ProjectReference Include="..\DevBuddy.Server\DevBuddy.Server.csproj" />
   </ItemGroup>
 
 </Project>

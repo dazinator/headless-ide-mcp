@@ -1,7 +1,7 @@
-using HeadlessIdeMcp.Core;
+using DevBuddy.Core;
 using Shouldly;
 
-namespace HeadlessIdeMcp.IntegrationTests;
+namespace DevBuddy.IntegrationTests;
 
 /// <summary>
 /// Integration tests for the FileSystemService

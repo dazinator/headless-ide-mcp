@@ -1,4 +1,4 @@
-namespace HeadlessIdeMcp.Core;
+namespace DevBuddy.Core;
 
 /// <summary>
 /// Implementation of file system operations
