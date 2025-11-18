@@ -1,6 +1,6 @@
 # Security Documentation
 
-This document describes the security controls implemented in the Headless IDE MCP server to ensure safe production deployment.
+This document describes the security controls implemented in the DevBuddy server to ensure safe production deployment.
 
 ## Table of Contents
 
@@ -16,7 +16,7 @@ This document describes the security controls implemented in the Headless IDE MC
 
 ## Security Architecture
 
-The Headless IDE MCP server implements defense-in-depth security with multiple layers of protection:
+The DevBuddy server implements defense-in-depth security with multiple layers of protection:
 
 1. **Authentication**: Optional API key authentication for access control
 2. **Container Isolation**: Runs in Docker with limited privileges

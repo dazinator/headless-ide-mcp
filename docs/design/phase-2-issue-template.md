@@ -9,7 +9,7 @@
 
 ## Overview
 
-This issue tracks Phase 2 of the CLI-first Headless IDE MCP architecture implementation. Phase 1 (Core Shell Execution) has been completed successfully with all tests passing. Phase 2 focuses on production hardening to ensure security and reliability for production deployment.
+This issue tracks Phase 2 of the CLI-first DevBuddy architecture implementation. Phase 1 (Core Shell Execution) has been completed successfully with all tests passing. Phase 2 focuses on production hardening to ensure security and reliability for production deployment.
 
 ## Prerequisites
 
@@ -45,8 +45,8 @@ Add production-grade security controls to prevent information disclosure and res
 - [ ] Security documentation updated
 
 **Files to Create/Modify:**
-- `src/HeadlessIdeMcp.Core/ProcessExecution/CommandExecutionService.cs` (MODIFY)
-- `src/HeadlessIdeMcp.Server/appsettings.json` (MODIFY)
+- `src/DevBuddy.Core/ProcessExecution/CommandExecutionService.cs` (MODIFY)
+- `src/DevBuddy.Server/appsettings.json` (MODIFY)
 - `docker-compose.yml` (MODIFY)
 - `docs/security.md` (NEW)
 
@@ -73,8 +73,8 @@ Implement comprehensive audit logging to track all command executions for securi
 - [ ] Documentation updated
 
 **Files to Create/Modify:**
-- `src/HeadlessIdeMcp.Core/ProcessExecution/CommandExecutionService.cs` (MODIFY)
-- `src/HeadlessIdeMcp.Server/appsettings.json` (MODIFY)
+- `src/DevBuddy.Core/ProcessExecution/CommandExecutionService.cs` (MODIFY)
+- `src/DevBuddy.Server/appsettings.json` (MODIFY)
 - `docs/operations.md` (NEW)
 
 **Estimated Effort:** 6-8 hours

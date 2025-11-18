@@ -1,6 +1,6 @@
 # Security Checklist
 
-This checklist provides a comprehensive guide for security validation before production deployment of the Headless IDE MCP server.
+This checklist provides a comprehensive guide for security validation before production deployment of the DevBuddy server.
 
 ## Pre-Deployment Security Checklist
 

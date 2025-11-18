@@ -1,6 +1,6 @@
 # Git Authentication in Dev Container
 
-This document explains how to configure git authentication within the Headless IDE MCP container to enable git operations with remote repositories (GitHub, Azure DevOps, etc.) without exposing credentials to AI agents.
+This document explains how to configure git authentication within the DevBuddy container to enable git operations with remote repositories (GitHub, Azure DevOps, etc.) without exposing credentials to AI agents.
 
 ## Overview
 
@@ -137,7 +137,7 @@ Once configured, you can test git authentication:
 ### Using Docker Exec
 
 ```bash
-docker exec -it headless-ide-mcp-server git ls-remote https://github.com/user/repo.git
+docker exec -it devbuddy-server git ls-remote https://github.com/user/repo.git
 ```
 
 ## Security Considerations
@@ -176,18 +176,18 @@ If git operations fail with authentication errors:
 
 1. **Check environment variables are set**:
    ```bash
-   docker exec -it headless-ide-mcp-server env | grep -E "GIT_|GITHUB_|AZDO_"
+   docker exec -it devbuddy-server env | grep -E "GIT_|GITHUB_|AZDO_"
    ```
 
 2. **Verify credential helper is configured**:
    ```bash
-   docker exec -it headless-ide-mcp-server git config --get credential.helper
+   docker exec -it devbuddy-server git config --get credential.helper
    ```
    Should output: `store`
 
 3. **Check credentials file**:
    ```bash
-   docker exec -it headless-ide-mcp-server cat /home/vscode/.git-credentials
+   docker exec -it devbuddy-server cat /home/vscode/.git-credentials
    ```
    Should show entries like: `https://username:token@github.com`
 
@@ -217,7 +217,7 @@ Make sure you're using HTTPS URLs:
 If you need different credentials for different repositories, you can configure git credential helpers per-URL:
 
 ```bash
-docker exec -it headless-ide-mcp-server bash -c '
+docker exec -it devbuddy-server bash -c '
 git config --global credential.https://github.com/org1.helper "store --file ~/.git-credentials-org1"
 git config --global credential.https://github.com/org2.helper "store --file ~/.git-credentials-org2"
 '

@@ -1,4 +1,4 @@
-# Headless IDE MCP Documentation
+# DevBuddy Documentation
 
 Welcome to the Headless IDE Model Context Protocol (MCP) server documentation.
 
@@ -12,9 +12,9 @@ Welcome to the Headless IDE Model Context Protocol (MCP) server documentation.
 - **[Operations](operations.md)** - Monitoring, logging, and maintenance procedures
 - **[Shell Execution Usage](shell-execution-usage.md)** - Guide to using shell execution tools
 
-## What is Headless IDE MCP?
+## What is DevBuddy?
 
-The Headless IDE MCP server is an ASP.NET Core application that provides Model Context Protocol (MCP) tools for analyzing .NET codebases and executing shell commands in a secure, sandboxed environment. This server exposes MCP tools that can be consumed by AI assistants like Claude Desktop and other MCP clients to understand and work with .NET projects.
+The DevBuddy server is an ASP.NET Core application that provides Model Context Protocol (MCP) tools for analyzing .NET codebases and executing shell commands in a secure, sandboxed environment. This server exposes MCP tools that can be consumed by AI assistants like Claude Desktop and other MCP clients to understand and work with .NET projects.
 
 ## Key Features
 

@@ -1,4 +1,4 @@
-# Headless IDE MCP
+# DevBuddy
 
 A Model Context Protocol (MCP) server built with ASP.NET Core that provides tools for analyzing .NET codebases and executing shell commands in a secure, sandboxed environment. This server exposes MCP tools that can be consumed by AI assistants and other MCP clients to understand and work with .NET projects.
 
@@ -96,7 +96,7 @@ Content-Type: application/json
 
 ## Security
 
-The Headless IDE MCP server implements production-grade security controls:
+The DevBuddy MCP server implements production-grade security controls:
 
 - **API Key Authentication**: Optional authentication for access control (disabled by default)
 - **Command Validation**: Allowlist/denylist enforcement to block dangerous commands
@@ -128,12 +128,12 @@ For detailed security information, see:
 ## Project Structure
 
 ```
-headless-ide-mcp/
+devbuddy/
 ├── src/
-│   ├── HeadlessIdeMcp.Server/          # ASP.NET Core MCP server
-│   ├── HeadlessIdeMcp.Core/            # Core tool logic
-│   ├── HeadlessIdeMcp.Bridge/          # Native stdio-to-HTTP bridge for Claude Desktop
-│   ├── HeadlessIdeMcp.IntegrationTests/ # Integration tests
+│   ├── DevBuddy.Server/          # ASP.NET Core MCP server
+│   ├── DevBuddy.Core/            # Core tool logic
+│   ├── DevBuddy.Bridge/          # Native stdio-to-HTTP bridge for Claude Desktop
+│   ├── DevBuddy.IntegrationTests/ # Integration tests
 │   └── Solution.sln                     # Main solution
 ├── sample-codebase/                     # Sample .NET solution for testing
 │   ├── SampleProject1/                  # Sample C# project
@@ -267,7 +267,7 @@ dotnet test
 ### Run Locally
 
 ```bash
-cd src/HeadlessIdeMcp.Server
+cd src/DevBuddy.Server
 export CODE_BASE_PATH=/path/to/your/codebase
 dotnet run
 ```
@@ -284,16 +284,16 @@ The sample codebase will be automatically mounted into the container, and you ca
 
 The project follows clean architecture principles:
 
-- **HeadlessIdeMcp.Server**: HTTP/MCP layer, hosts the ASP.NET Core application
-- **HeadlessIdeMcp.Core**: Business logic layer, contains tool implementations independent of MCP
-- **HeadlessIdeMcp.IntegrationTests**: Integration tests that verify tools against real file system
+- **DevBuddy.Server**: HTTP/MCP layer, hosts the ASP.NET Core application
+- **DevBuddy.Core**: Business logic layer, contains tool implementations independent of MCP
+- **DevBuddy.IntegrationTests**: Integration tests that verify tools against real file system
 
 MCP tools are discovered automatically through the `[McpServerToolType]` and `[McpServerTool]` attributes, with full dependency injection support.
 
 ## Adding New Tools
 
-1. Add business logic to `HeadlessIdeMcp.Core`
-2. Create a tool class in `HeadlessIdeMcp.Server` with `[McpServerToolType]` attribute
+1. Add business logic to `DevBuddy.Core`
+2. Create a tool class in `DevBuddy.Server` with `[McpServerToolType]` attribute
 3. Mark methods with `[McpServerTool]` attribute
 4. Add integration tests
 5. Update the `.http` file with example requests
@@ -314,7 +314,7 @@ See [LICENCE.md](LICENCE.md)
 
 ---
 
-[docs :open_book:](https://dazinator.github.io/headless-ide-mcp/)
+[docs :open_book:](https://dazinator.github.io/DevBuddy/)
 
 
 ### Serving the Docs Locally

@@ -12,7 +12,7 @@ The Dockerfile uses multi-stage builds:
 ## Local Development vs Docker
 
 When developing locally:
-- Run `dotnet run` from the `src/HeadlessIdeMcp.Server` directory
+- Run `dotnet run` from the `src/DevBuddy.Server` directory
 - Set `CODE_BASE_PATH` environment variable to point to the code you want to analyze
 - The server binds to a port specified in `Properties/launchSettings.json` (if exists) or defaults
 

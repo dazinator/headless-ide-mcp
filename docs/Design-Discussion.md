@@ -1,13 +1,13 @@
 
 ---
 
-headless-ide-mcp
+devbuddy
 
 Design Document (Revised for CLI-first Architecture)
 
 1. Overview
 
-headless-ide-mcp is a custom Model Context Protocol (MCP) server that provides a headless, containerised development environment for AI agents. It exposes a controlled runtime where the agent can execute arbitrary CLI commands, explore the codebase, query project structure, interact with LSP tools, and call higher level domain specific tools implemented in .NET.
+devbuddy is a custom Model Context Protocol (MCP) server that provides a headless, containerised development environment for AI agents. It exposes a controlled runtime where the agent can execute arbitrary CLI commands, explore the codebase, query project structure, interact with LSP tools, and call higher level domain specific tools implemented in .NET.
 
 This approach mirrors the operational model used by GitHub Copilot Agents on GitHub Actions runners. The agent has access to a predefined set of CLI tools on the container's PATH, along with a standardised MCP tool for executing commands. The agent discovers the available capabilities and composes them at runtime.
 
@@ -87,7 +87,7 @@ The server is not tied to any workflow engine. It acts only as a capability prov
 
 Your existing repo structure is appropriate and supports this architecture:
 
-headless-ide-mcp/
+devbuddy/
 ├── src/
 │   ├── HeadlessIdeMcp.Server/           # ASP.NET Core MCP server with CLI tools
 │   ├── HeadlessIdeMcp.Core/             # Higher level analysis libraries
@@ -282,7 +282,7 @@ services:
     volumes:
       - repo:/repo
 
-  headless-ide-mcp:
+  devbuddy:
     build: .
     volumes:
       - repo:/repo

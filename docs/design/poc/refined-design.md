@@ -1,4 +1,4 @@
-# Refined Design: CLI-First Headless IDE MCP
+# Refined Design: CLI-First DevBuddy
 
 **Date:** 2025-11-15 (Updated)  
 **Version:** 2.1 (Simplified with DevContainer base)  
@@ -9,7 +9,7 @@
 
 ## 1. Executive Summary
 
-This document presents the refined design for the Headless IDE MCP server, validated through comprehensive POCs. The design provides AI agents with a powerful, secure, containerized development environment comparable to GitHub Actions runners and GitHub Codespaces.
+This document presents the refined design for the DevBuddy server, validated through comprehensive POCs. The design provides AI agents with a powerful, secure, containerized development environment comparable to GitHub Actions runners and GitHub Codespaces.
 
 ### Key Capabilities
 - ✅ Execute arbitrary CLI commands (dotnet, ripgrep, jq, etc.)
@@ -39,7 +39,7 @@ This design focuses on **shell execution only**. Additional capabilities (OmniSh
                         │ MCP Protocol (HTTP/JSON-RPC)
                         ▼
 ┌─────────────────────────────────────────────────────────────┐
-│    Headless IDE MCP Server (DevContainer - mcr.microsoft.   │
+│    DevBuddy Server (DevContainer - mcr.microsoft.   │
 │             com/devcontainers/dotnet:1-8.0)                  │
 │  ┌────────────────────────────────────────────────────────┐ │
 │  │           ASP.NET Core MCP Server Layer                │ │
@@ -50,7 +50,7 @@ This design focuses on **shell execution only**. Additional capabilities (OmniSh
 │  └─────────┼──────────────────────────────────────────────┘ │
 │            │                                                 │
 │  ┌─────────▼─────────────────────────────────────────────┐ │
-│  │        HeadlessIdeMcp.Core (Business Logic)            │ │
+│  │        DevBuddy.Core (Business Logic)            │ │
 │  │  ┌──────────────────────┐                              │ │
 │  │  │ CommandExecution     │                              │ │
 │  │  │ Service              │                              │ │
@@ -92,7 +92,7 @@ This design focuses on **shell execution only**. Additional capabilities (OmniSh
 - Request/response serialization
 - Dependency injection container
 
-#### HeadlessIdeMcp.Core
+#### DevBuddy.Core
 - Business logic for shell command execution
 - Process execution with security controls
 - Independent of MCP protocol
@@ -332,20 +332,20 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Copy and restore
-COPY ["src/HeadlessIdeMcp.Server/HeadlessIdeMcp.Server.csproj", "HeadlessIdeMcp.Server/"]
-COPY ["src/HeadlessIdeMcp.Core/HeadlessIdeMcp.Core.csproj", "HeadlessIdeMcp.Core/"]
+COPY ["src/DevBuddy.Server/DevBuddy.Server.csproj", "DevBuddy.Server/"]
+COPY ["src/DevBuddy.Core/DevBuddy.Core.csproj", "DevBuddy.Core/"]
 COPY ["src/Directory.Build.props", "./"]
 COPY ["src/Directory.Packages.props", "./"]
 COPY ["src/global.json", "./"]
 
-RUN dotnet restore "HeadlessIdeMcp.Server/HeadlessIdeMcp.Server.csproj"
+RUN dotnet restore "DevBuddy.Server/DevBuddy.Server.csproj"
 
 # Copy source and build
-COPY src/HeadlessIdeMcp.Server/ HeadlessIdeMcp.Server/
-COPY src/HeadlessIdeMcp.Core/ HeadlessIdeMcp.Core/
+COPY src/DevBuddy.Server/ DevBuddy.Server/
+COPY src/DevBuddy.Core/ DevBuddy.Core/
 
-RUN dotnet build "HeadlessIdeMcp.Server/HeadlessIdeMcp.Server.csproj" -c Release -o /app/build
-RUN dotnet publish "HeadlessIdeMcp.Server/HeadlessIdeMcp.Server.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet build "DevBuddy.Server/DevBuddy.Server.csproj" -c Release -o /app/build
+RUN dotnet publish "DevBuddy.Server/DevBuddy.Server.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Final stage - combine DevContainer with published app
 FROM base AS final
@@ -361,7 +361,7 @@ USER vscode
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8080/health || exit 1
 
-ENTRYPOINT ["dotnet", "HeadlessIdeMcp.Server.dll"]
+ENTRYPOINT ["dotnet", "DevBuddy.Server.dll"]
 ```
 
 ### 5.3 Pre-installed CLI Tools (from DevContainer)
@@ -435,8 +435,8 @@ ENV ASPNETCORE_ENVIRONMENT=Production
 #### Docker Configuration
 ```yaml
 services:
-  headless-ide-mcp:
-    image: headless-ide-mcp:latest
+  devbuddy:
+    image: devbuddy:latest
     # DevContainer uses vscode user (UID 1000) - automatically configured
     read_only: true                # Read-only root filesystem
     security_opt:
@@ -620,8 +620,8 @@ public class ShellTools
 
 ```bash
 # Clone repository
-git clone https://github.com/dazinator/headless-ide-mcp.git
-cd headless-ide-mcp
+git clone https://github.com/dazinator/devbuddy.git
+cd devbuddy
 
 # Build and run with Docker Compose
 docker-compose up --build
@@ -672,7 +672,7 @@ jobs:
       - name: Unit Tests
         run: dotnet test
       - name: Build Docker Image
-        run: docker build -t headless-ide-mcp:test .
+        run: docker build -t devbuddy:test .
       - name: Integration Tests
         run: docker-compose -f docker-compose.test.yml up --abort-on-container-exit
 ```
@@ -933,15 +933,15 @@ The following capabilities are **explicitly deferred** to separate future work i
 ### Appendix A: Complete File Structure
 
 ```
-headless-ide-mcp/
+devbuddy/
 ├── src/
-│   ├── HeadlessIdeMcp.Server/
+│   ├── DevBuddy.Server/
 │   │   ├── Tools/
 │   │   │   ├── ShellTools.cs          # NEW: Shell execution tools
 │   │   │   └── FileSystemTools.cs     # EXISTING
 │   │   ├── Program.cs                 # UPDATED: New service registrations
-│   │   └── HeadlessIdeMcp.Server.csproj
-│   ├── HeadlessIdeMcp.Core/
+│   │   └── DevBuddy.Server.csproj
+│   ├── DevBuddy.Core/
 │   │   ├── ProcessExecution/
 │   │   │   ├── ICommandExecutionService.cs   # NEW
 │   │   │   ├── CommandExecutionService.cs    # NEW
@@ -950,7 +950,7 @@ headless-ide-mcp/
 │   │   │   └── CommandExecutionOptions.cs    # NEW
 │   │   ├── FileSystemService.cs       # EXISTING
 │   │   └── IFileSystemService.cs      # EXISTING
-│   ├── HeadlessIdeMcp.IntegrationTests/
+│   ├── DevBuddy.IntegrationTests/
 │   │   ├── ShellToolsTests.cs         # NEW: Integration tests
 │   │   └── FileSystemToolsTests.cs    # EXISTING
 │   └── Solution.sln
@@ -1009,7 +1009,7 @@ ALLOWED_PATHS=/workspace,/tmp          # Optional: Allowed working directories
 
 ## 15. Conclusion
 
-This refined design provides a clear, validated path to implementing the CLI-first Headless IDE MCP architecture. All critical POCs have passed, and the design is ready for phased implementation.
+This refined design provides a clear, validated path to implementing the CLI-first DevBuddy architecture. All critical POCs have passed, and the design is ready for phased implementation.
 
 ### Next Steps
 1. Create detailed implementation plan with sub-issues

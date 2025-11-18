@@ -1,6 +1,6 @@
 # Testing Git Authentication
 
-This document provides instructions for testing the git authentication functionality in the Headless IDE MCP container.
+This document provides instructions for testing the git authentication functionality in the DevBuddy container.
 
 ## Prerequisites
 
@@ -51,7 +51,7 @@ Git username: your-username
 Connect to the running container:
 
 ```bash
-docker exec -it headless-ide-mcp-server bash
+docker exec -it devbuddy-server bash
 ```
 
 Check git credential helper is configured:
@@ -84,7 +84,7 @@ cat ~/.git-credentials
 Using a repository you have access to:
 
 ```bash
-docker exec -it headless-ide-mcp-server git ls-remote https://github.com/your-username/your-repo.git
+docker exec -it devbuddy-server git ls-remote https://github.com/your-username/your-repo.git
 ```
 
 This should list the refs without prompting for credentials.
@@ -92,7 +92,7 @@ This should list the refs without prompting for credentials.
 #### Test Clone Operation
 
 ```bash
-docker exec -it headless-ide-mcp-server bash -c '
+docker exec -it devbuddy-server bash -c '
 cd /tmp && 
 git clone https://github.com/your-username/your-repo.git test-clone &&
 cd test-clone &&
@@ -105,7 +105,7 @@ rm -rf test-clone
 #### Test Azure DevOps (if configured)
 
 ```bash
-docker exec -it headless-ide-mcp-server git ls-remote https://dev.azure.com/your-org/your-project/_git/your-repo
+docker exec -it devbuddy-server git ls-remote https://dev.azure.com/your-org/your-project/_git/your-repo
 ```
 
 ### 4. Test via MCP Shell Execute Tool
@@ -134,7 +134,7 @@ The response should contain the repository refs without any authentication error
 Check that credentials are not exposed in logs:
 
 ```bash
-docker logs headless-ide-mcp-server 2>&1 | grep -i "token\|password\|pat"
+docker logs devbuddy-server 2>&1 | grep -i "token\|password\|pat"
 ```
 
 You should NOT see any actual token values. If credentials appear in URLs, they should be redacted as `***REDACTED***`.
@@ -145,7 +145,7 @@ You should NOT see any actual token values. If credentials appear in URLs, they 
 
 1. **Verify environment variables are set:**
    ```bash
-   docker exec -it headless-ide-mcp-server env | grep -E "GITHUB_PAT|AZDO_PAT"
+   docker exec -it devbuddy-server env | grep -E "GITHUB_PAT|AZDO_PAT"
    ```
    
 2. **Check token scopes:**
@@ -167,7 +167,7 @@ If `~/.git-credentials` doesn't exist:
 
 2. Verify entrypoint script is executing:
    ```bash
-   docker logs headless-ide-mcp-server 2>&1 | head -50
+   docker logs devbuddy-server 2>&1 | head -50
    ```
 
 ### Permission Denied
@@ -176,13 +176,13 @@ If you see permission errors:
 
 1. Check file permissions:
    ```bash
-   docker exec -it headless-ide-mcp-server stat -c '%a %U:%G' ~/.git-credentials
+   docker exec -it devbuddy-server stat -c '%a %U:%G' ~/.git-credentials
    ```
    Should output: `600 vscode:vscode`
 
 2. Verify running as vscode user:
    ```bash
-   docker exec -it headless-ide-mcp-server whoami
+   docker exec -it devbuddy-server whoami
    ```
    Should output: `vscode`
 
@@ -197,13 +197,13 @@ If you see permission errors:
 
 2. **Verify audit logs redact credentials:**
    ```bash
-   docker logs headless-ide-mcp-server 2>&1 | grep "git clone"
+   docker logs devbuddy-server 2>&1 | grep "git clone"
    ```
    URLs should show `***REDACTED***` instead of actual tokens
 
 3. **Confirm credentials aren't in Docker image:**
    ```bash
-   docker history headless-ide-mcp:dev | grep -i "token\|pat"
+   docker history devbuddy:dev | grep -i "token\|pat"
    ```
    Should find nothing (credentials are runtime-configured, not baked in)
 
@@ -220,7 +220,7 @@ set -e
 echo "=== Testing Git Authentication in Container ==="
 
 # Check container is running
-if ! docker ps | grep -q headless-ide-mcp-server; then
+if ! docker ps | grep -q devbuddy-server; then
     echo "❌ Container is not running. Start with: docker-compose up"
     exit 1
 fi
@@ -228,7 +228,7 @@ fi
 echo "✓ Container is running"
 
 # Check git config
-CRED_HELPER=$(docker exec headless-ide-mcp-server git config --get credential.helper)
+CRED_HELPER=$(docker exec devbuddy-server git config --get credential.helper)
 if [ "$CRED_HELPER" != "store" ]; then
     echo "❌ Git credential helper not configured correctly: $CRED_HELPER"
     exit 1
@@ -236,14 +236,14 @@ fi
 echo "✓ Git credential helper is configured: $CRED_HELPER"
 
 # Check credentials file exists
-if ! docker exec headless-ide-mcp-server test -f /home/vscode/.git-credentials; then
+if ! docker exec devbuddy-server test -f /home/vscode/.git-credentials; then
     echo "❌ Credentials file does not exist"
     exit 1
 fi
 echo "✓ Credentials file exists"
 
 # Check file permissions
-PERMS=$(docker exec headless-ide-mcp-server stat -c '%a' /home/vscode/.git-credentials)
+PERMS=$(docker exec devbuddy-server stat -c '%a' /home/vscode/.git-credentials)
 if [ "$PERMS" != "600" ]; then
     echo "❌ Incorrect permissions on credentials file: $PERMS (expected 600)"
     exit 1
@@ -253,7 +253,7 @@ echo "✓ Credentials file has correct permissions: $PERMS"
 # Test GitHub access (requires GITHUB_PAT and a valid test repo)
 if [ -n "$TEST_GITHUB_REPO" ]; then
     echo "Testing GitHub access with repo: $TEST_GITHUB_REPO"
-    if docker exec headless-ide-mcp-server git ls-remote "$TEST_GITHUB_REPO" > /dev/null 2>&1; then
+    if docker exec devbuddy-server git ls-remote "$TEST_GITHUB_REPO" > /dev/null 2>&1; then
         echo "✓ GitHub authentication successful"
     else
         echo "❌ GitHub authentication failed"

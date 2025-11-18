@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  headless-ide-mcp:
+  devbuddy:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080;https://+:8081

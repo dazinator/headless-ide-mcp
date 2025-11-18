@@ -1,6 +1,6 @@
 # Design Documentation
 
-This directory contains the complete design package for implementing the CLI-first Headless IDE MCP architecture.
+This directory contains the complete design package for implementing the CLI-first DevBuddy architecture.
 
 ## Quick Start
 

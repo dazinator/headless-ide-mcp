@@ -1,10 +1,10 @@
-# Connecting Claude Desktop to Headless IDE MCP
+# Connecting Claude Desktop to DevBuddy
 
-This guide explains how to configure Claude Desktop to connect to the Headless IDE MCP server running in a Docker container.
+This guide explains how to configure Claude Desktop to connect to the DevBuddy server running in a Docker container.
 
 ## Overview
 
-The Headless IDE MCP server supports both **HTTP** and **HTTPS** transport and runs as a containerized service. Claude Desktop provides two ways to connect:
+The DevBuddy server supports both **HTTP** and **HTTPS** transport and runs as a containerized service. Claude Desktop provides two ways to connect:
 
 1. **✅ Recommended: Remote MCP Connector** (Beta) - Direct HTTPS connection using Claude's native remote connector feature
 2. **Alternative: stdio Bridge Proxy** - Uses a bridge tool to convert between stdio and HTTP
@@ -19,9 +19,9 @@ The Headless IDE MCP server supports both **HTTP** and **HTTPS** transport and r
 
 - Claude Desktop installed ([download here](https://claude.ai/download))
 - Docker Desktop running
-- Headless IDE MCP server running with HTTPS enabled (configured by default)
+- DevBuddy server running with HTTPS enabled (configured by default)
 
-### Step 1: Start the Headless IDE MCP Server
+### Step 1: Start the DevBuddy Server
 
 Ensure the MCP server is running with Docker Compose:
 
@@ -86,9 +86,9 @@ Claude Desktop will connect directly to your HTTPS MCP server - no bridge needed
 ```
 Claude Desktop (stdio) 
     ↓
-headless-ide-mcp-bridge (native .NET bridge)
+devbuddy-bridge (native .NET bridge)
     ↓ HTTP/SSE
-Headless IDE MCP Server (HTTP/HTTPS) in Docker Container
+DevBuddy Server (HTTP/HTTPS) in Docker Container
 ```
 
 ### Benefits
@@ -103,30 +103,30 @@ Headless IDE MCP Server (HTTP/HTTPS) in Docker Container
 
 - **Claude Desktop** installed ([download here](https://claude.ai/download))
 - **Docker Desktop** running
-- **Headless IDE MCP server** running in Docker
-- **Bridge executable** - Download from the [releases page](https://github.com/dazinator/headless-ide-mcp/releases) or build from source
+- **DevBuddy server** running in Docker
+- **Bridge executable** - Download from the [releases page](https://github.com/dazinator/devbuddy/releases) or build from source
 
 ### Step 1: Download the Bridge
 
-Download the appropriate bridge executable for your platform from the [releases page](https://github.com/dazinator/headless-ide-mcp/releases):
+Download the appropriate bridge executable for your platform from the [releases page](https://github.com/dazinator/devbuddy/releases):
 
-- **Windows (x64)**: `headless-ide-mcp-bridge-win-x64.zip`
-- **Windows (ARM64)**: `headless-ide-mcp-bridge-win-arm64.zip`
-- **macOS (Intel)**: `headless-ide-mcp-bridge-osx-x64.tar.gz`
-- **macOS (Apple Silicon)**: `headless-ide-mcp-bridge-osx-arm64.tar.gz`
-- **Linux (x64)**: `headless-ide-mcp-bridge-linux-x64.tar.gz`
-- **Linux (ARM64)**: `headless-ide-mcp-bridge-linux-arm64.tar.gz`
+- **Windows (x64)**: `devbuddy-bridge-win-x64.zip`
+- **Windows (ARM64)**: `devbuddy-bridge-win-arm64.zip`
+- **macOS (Intel)**: `devbuddy-bridge-osx-x64.tar.gz`
+- **macOS (Apple Silicon)**: `devbuddy-bridge-osx-arm64.tar.gz`
+- **Linux (x64)**: `devbuddy-bridge-linux-x64.tar.gz`
+- **Linux (ARM64)**: `devbuddy-bridge-linux-arm64.tar.gz`
 
 Extract the archive and note the path to the executable.
 
 **Alternatively**, build from source:
 ```bash
-cd src/HeadlessIdeMcp.Bridge
+cd src/DevBuddy.Bridge
 dotnet publish -c Release -r <your-runtime-id> --self-contained -p:PublishSingleFile=true
 # Executable will be in bin/Release/net8.0/<runtime-id>/publish/
 ```
 
-### Step 2: Start the Headless IDE MCP Server
+### Step 2: Start the DevBuddy Server
 
 Ensure the MCP server is running with Docker Compose:
 
@@ -167,7 +167,7 @@ The Claude Desktop configuration file location depends on your operating system:
 {
   "mcpServers": {
     "headless-ide": {
-      "command": "C:\\path\\to\\headless-ide-mcp-bridge.exe",
+      "command": "C:\\path\\to\\devbuddy-bridge.exe",
       "args": ["http://localhost:5000/"]
     }
   }
@@ -179,7 +179,7 @@ The Claude Desktop configuration file location depends on your operating system:
 {
   "mcpServers": {
     "headless-ide": {
-      "command": "/path/to/headless-ide-mcp-bridge",
+      "command": "/path/to/devbuddy-bridge",
       "args": ["http://localhost:5000/"]
     }
   }
@@ -191,7 +191,7 @@ The Claude Desktop configuration file location depends on your operating system:
 {
   "mcpServers": {
     "headless-ide": {
-      "command": "/path/to/headless-ide-mcp-bridge",
+      "command": "/path/to/devbuddy-bridge",
       "args": ["http://localhost:5000/"]
     }
   }
@@ -199,7 +199,7 @@ The Claude Desktop configuration file location depends on your operating system:
 ```
 
 **Configuration Notes:**
-- Replace `/path/to/headless-ide-mcp-bridge` with the actual path to the bridge executable
+- Replace `/path/to/devbuddy-bridge` with the actual path to the bridge executable
 - You can use either `http://localhost:5000/` or `https://localhost:5001/`
 - The trailing `/` is required
 - For HTTPS with self-signed certificates, use HTTP or configure certificate trust
@@ -228,11 +228,11 @@ If configured correctly, Claude will use the MCP tools from your containerized s
 
 1. **Check the executable path** is correct in the configuration
 2. **Verify permissions** - ensure the bridge executable is executable:
-   - **macOS/Linux**: `chmod +x /path/to/headless-ide-mcp-bridge`
+   - **macOS/Linux**: `chmod +x /path/to/devbuddy-bridge`
    - **Windows**: Right-click → Properties → Unblock if the file is blocked
 3. **Test the bridge manually**:
    ```bash
-   echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | /path/to/headless-ide-mcp-bridge http://localhost:5000/
+   echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | /path/to/devbuddy-bridge http://localhost:5000/
    ```
    You should see a JSON response with the list of tools
 
@@ -247,13 +247,13 @@ If configured correctly, Claude will use the MCP tools from your containerized s
    - **Claude Desktop logs**: Settings → Developer → View Logs
    - **Manual test with logs**:
      ```bash
-     echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | /path/to/headless-ide-mcp-bridge http://localhost:5000/ 2> bridge.log
+     echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | /path/to/devbuddy-bridge http://localhost:5000/ 2> bridge.log
      cat bridge.log
      ```
 
 3. **Test server connectivity** from the bridge:
    ```bash
-   /path/to/headless-ide-mcp-bridge http://localhost:5000/ 2>&1 | grep "health check"
+   /path/to/devbuddy-bridge http://localhost:5000/ 2>&1 | grep "health check"
    # Should show: [MCP Bridge] Server health check passed
    ```
 
@@ -282,7 +282,7 @@ Claude Desktop (stdio)
     ↓
 mcp-server-and-gw (bridge proxy)
     ↓
-Headless IDE MCP Server (HTTP) in Docker Container
+DevBuddy Server (HTTP) in Docker Container
 ```
 
 ### Prerequisites
@@ -293,9 +293,9 @@ Headless IDE MCP Server (HTTP) in Docker Container
   - Download from [nodejs.org](https://nodejs.org/)
   - **Windows users**: After installation, restart your terminal/command prompt
   - Verify installation by running: `node -v` and `npm -v`
-- **Headless IDE MCP server** running in Docker
+- **DevBuddy server** running in Docker
 
-### Step 1: Start the Headless IDE MCP Server
+### Step 1: Start the DevBuddy Server
 
 First, ensure the MCP server is running with Docker Compose:
 
@@ -459,7 +459,7 @@ If configured correctly, Claude will use the MCP tools from your containerized s
    ```bash
    docker ps
    ```
-   Look for `headless-ide-mcp-server`.
+   Look for `devbuddy-server`.
 
 2. **Test the health endpoint**:
    ```bash
@@ -564,7 +564,7 @@ The `/c` flag tells `cmd` to execute the command and then terminate. This proper
    ```bash
    docker ps
    ```
-   Look for `headless-ide-mcp-server` in the list. If it's not there, start it:
+   Look for `devbuddy-server` in the list. If it's not there, start it:
    ```bash
    docker-compose up -d
    ```
@@ -577,7 +577,7 @@ The `/c` flag tells `cmd` to execute the command and then terminate. This proper
    
    If you get "Connection refused" or no response:
    - The container isn't running (see step 1)
-   - Check Docker logs: `docker-compose logs headless-ide-mcp`
+   - Check Docker logs: `docker-compose logs devbuddy`
 
 3. **Test the MCP server directly** with a tools/list request:
    
@@ -630,7 +630,7 @@ The `/c` flag tells `cmd` to execute the command and then terminate. This proper
 
 **Problem**: Health endpoint works (`http://localhost:5000/health` returns healthy status), but container logs show:
 ```
-Server (HeadlessIdeMcp.Server 1.0.0.0) message processing canceled.
+Server (DevBuddy.Server 1.0.0.0) message processing canceled.
 ```
 
 **Cause**: The MCP server is receiving requests but the HTTP/SSE transport is not completing the handshake properly. This can happen when:
@@ -723,7 +723,7 @@ Server (HeadlessIdeMcp.Server 1.0.0.0) message processing canceled.
    - Consider filing an issue with the `mcp-server-and-gw` project about ASP.NET Core compatibility
    
    Check:
-   - Docker container logs: `docker-compose logs -f headless-ide-mcp`
+   - Docker container logs: `docker-compose logs -f devbuddy`
    - Whether the server needs to be rebuilt: `docker-compose up --build`
 
 ### Connection Issues
@@ -733,7 +733,7 @@ Server (HeadlessIdeMcp.Server 1.0.0.0) message processing canceled.
 **Solutions**:
 1. Verify the Docker container is running:
    ```bash
-   docker ps | grep headless-ide-mcp
+   docker ps | grep devbuddy
    ```
 
 2. Check the MCP server is accessible:
@@ -838,7 +838,7 @@ When running the MCP server:
 
 ### Container Security
 
-The Headless IDE MCP server runs with production-grade security:
+The DevBuddy server runs with production-grade security:
 - Non-root user execution
 - Capability dropping
 - Resource limits (CPU and memory)
@@ -930,9 +930,9 @@ If you're building your own MCP client or using a different AI assistant that su
 If you encounter issues:
 
 1. Check the [Troubleshooting](#troubleshooting) section above
-2. Review the Docker container logs: `docker-compose logs headless-ide-mcp`
+2. Review the Docker container logs: `docker-compose logs devbuddy`
 3. Test the MCP server directly with curl (see examples in the [.http file](../.http/test-mcp-server.http))
-4. Open an issue on the [GitHub repository](https://github.com/dazinator/headless-ide-mcp/issues)
+4. Open an issue on the [GitHub repository](https://github.com/dazinator/devbuddy/issues)
 
 ## References
 
