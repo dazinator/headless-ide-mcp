@@ -17,6 +17,11 @@ services:
       - CODE_BASE_PATH=/workspace
       - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
       - ASPNETCORE_Kestrel__Certificates__Default__Password=DevCertPassword
+      # Git authentication (optional - use .env file or set these manually)
+      # Empty defaults allow optional configuration. See .env.example for format.
+      - GIT_USERNAME=${GIT_USERNAME:-}
+      - GITHUB_PAT=${GITHUB_PAT:-}
+      - AZDO_PAT=${AZDO_PAT:-}
     volumes:
       # Mount the sample codebase into the container
       # Note: Read-write mount for development (allows agent to create/modify files)
@@ -27,6 +32,9 @@ services:
       # Optional: Mount local dev cert from host machine
       # Uncomment to use your local machine's dev cert instead of container-generated cert
       - ~/.aspnet/https:/https-host:ro
+      # Optional: Mount git credentials file directly (alternative to environment variables)
+      # Uncomment to use a pre-configured git credentials file instead of GITHUB_PAT/AZDO_PAT
+      # - ~/.git-credentials:/home/vscode/.git-credentials:ro
     networks:
       - mcp-network
     # Security options

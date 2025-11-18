@@ -178,9 +178,33 @@ docker build -t headless-ide-mcp:dev .
 - `ASPNETCORE_ENVIRONMENT`: The ASP.NET Core environment (Development, Production, etc.)
 - `ASPNETCORE_HTTP_PORTS`: HTTP port (default: 8080 in container, 5000 on host)
 
+### Git Authentication (Optional)
+
+To enable git operations with remote repositories (GitHub, Azure DevOps):
+
+1. Create a `.env` file from the template:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Edit `.env` and add your Personal Access Tokens:
+   ```bash
+   GIT_USERNAME=your-username
+   GITHUB_PAT=ghp_your_github_token
+   AZDO_PAT=your_azdo_token
+   ```
+
+3. Start the container:
+   ```bash
+   docker-compose up --build
+   ```
+
+See [Git Authentication](git-authentication.md) for detailed setup instructions and security considerations.
+
 ## Next Steps
 
 - **[Connect to Claude Desktop](claude-desktop-setup.md)** - Configure Claude Desktop to use this MCP server
+- **[Configure Git Authentication](git-authentication.md)** - Enable git operations with remote repositories
 - Explore the sample codebase at `sample-codebase/` to understand what the tools can analyze
 - Review the integration tests at `src/HeadlessIdeMcp.IntegrationTests/` to see how tools are tested
 - Add new tools by creating classes in `HeadlessIdeMcp.Server` with the `[McpServerToolType]` attribute
