@@ -177,8 +177,8 @@ public class GitRepositoryServiceIntegrationTests : IDisposable
         var developSha = ExecuteGit(_testRepoPath, "rev-parse main").Trim(); // Use main's SHA as placeholder
         File.WriteAllText(remoteBranchRef, developSha);
 
-        // Act - Checkout using "origin/develop" format
-        var result = await _sut.CheckoutBranchAsync(repo.Id, "origin/develop");
+        // Act - Create new branch tracking remote using explicit API
+        var result = await _sut.CheckoutBranchAsync(repo.Id, "develop", createNew: true, trackRemoteBranch: "origin/develop");
 
         // Assert
         result.ShouldBeTrue();
@@ -229,23 +229,53 @@ public class GitRepositoryServiceIntegrationTests : IDisposable
 
         // Setup: Ensure we're on main and develop exists locally
         ExecuteGit(_testRepoPath, "checkout main");
-        
-        // Setup remote
-        ExecuteGit(_testRepoPath, "remote add origin https://github.com/test/repo.git");
-        
-        // Create remote ref
-        var remoteBranchRef = Path.Combine(_testRepoPath, ".git", "refs", "remotes", "origin", "develop");
-        Directory.CreateDirectory(Path.GetDirectoryName(remoteBranchRef)!);
-        var developSha = ExecuteGit(_testRepoPath, "rev-parse develop").Trim();
-        File.WriteAllText(remoteBranchRef, developSha);
 
-        // Act - Try to checkout remote branch when local exists
-        var result = await _sut.CheckoutBranchAsync(repo.Id, "origin/develop");
+        // Act - Checkout existing local branch
+        var result = await _sut.CheckoutBranchAsync(repo.Id, "develop", createNew: false);
 
         // Assert
         result.ShouldBeTrue();
         var currentBranch = ExecuteGit(_testRepoPath, "rev-parse --abbrev-ref HEAD").Trim();
         currentBranch.ShouldBe("develop");
+    }
+
+    [Fact]
+    public async Task GetLocalAndRemoteBranchesAsync_ReturnsCorrectBranches()
+    {
+        // Arrange
+        var repo = new GitRepositoryConfiguration
+        {
+            Name = "test-repo",
+            RemoteUrl = "https://github.com/test/repo.git",
+            LocalPath = "test-repo",
+            CloneStatus = CloneStatus.Cloned
+        };
+        _dbContext.GitRepositories.Add(repo);
+        await _dbContext.SaveChangesAsync();
+
+        // Setup remote
+        ExecuteGit(_testRepoPath, "remote add origin https://github.com/test/repo.git");
+        
+        // Create remote refs to simulate fetched branches
+        var remoteRefsDir = Path.Combine(_testRepoPath, ".git", "refs", "remotes", "origin");
+        Directory.CreateDirectory(remoteRefsDir);
+        
+        var mainSha = ExecuteGit(_testRepoPath, "rev-parse main").Trim();
+        File.WriteAllText(Path.Combine(remoteRefsDir, "main"), mainSha);
+        
+        var developSha = ExecuteGit(_testRepoPath, "rev-parse develop").Trim();
+        File.WriteAllText(Path.Combine(remoteRefsDir, "develop"), developSha);
+
+        // Act
+        var (localBranches, remoteBranches) = await _sut.GetLocalAndRemoteBranchesAsync(repo.Id);
+
+        // Assert
+        localBranches.ShouldContain("main");
+        localBranches.ShouldContain("develop");
+        localBranches.ShouldContain("feature/test");
+        
+        remoteBranches.ShouldContain("origin/main");
+        remoteBranches.ShouldContain("origin/develop");
     }
 
     public void Dispose()

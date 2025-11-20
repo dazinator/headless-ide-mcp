@@ -14,7 +14,8 @@ public interface IGitRepositoryService
     Task DeleteAsync(int id);
     Task<bool> CheckRepositoryStatusAsync(int id);
     Task<List<string>> GetBranchesAsync(int id);
-    Task<bool> CheckoutBranchAsync(int id, string branchName, bool createNew = false);
+    Task<(List<string> LocalBranches, List<string> RemoteBranches)> GetLocalAndRemoteBranchesAsync(int id);
+    Task<bool> CheckoutBranchAsync(int id, string branchName, bool createNew = false, string? trackRemoteBranch = null);
 }
 
 public class GitRepositoryService : IGitRepositoryService
@@ -180,7 +181,44 @@ public class GitRepositoryService : IGitRepositoryService
         }
     }
 
-    public async Task<bool> CheckoutBranchAsync(int id, string branchName, bool createNew = false)
+    public async Task<(List<string> LocalBranches, List<string> RemoteBranches)> GetLocalAndRemoteBranchesAsync(int id)
+    {
+        var config = await GetByIdAsync(id);
+        if (config == null || config.CloneStatus != CloneStatus.Cloned)
+        {
+            return (new List<string>(), new List<string>());
+        }
+
+        try
+        {
+            var fullPath = Path.Combine(_gitReposBasePath, config.LocalPath);
+            
+            // Get local branches
+            var localBranchesOutput = await ExecuteGitCommandAsync(fullPath, "branch");
+            var localBranches = localBranchesOutput
+                .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+                .Select(b => b.Trim().TrimStart('*').Trim())
+                .Where(b => !string.IsNullOrWhiteSpace(b))
+                .ToList();
+            
+            // Get remote branches
+            var remoteBranchesOutput = await ExecuteGitCommandAsync(fullPath, "branch -r");
+            var remoteBranches = remoteBranchesOutput
+                .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+                .Select(b => b.Trim())
+                .Where(b => !string.IsNullOrWhiteSpace(b) && !b.Contains("HEAD ->"))
+                .ToList();
+            
+            return (localBranches, remoteBranches);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting branches for {RepoId}", id);
+            return (new List<string>(), new List<string>());
+        }
+    }
+
+    public async Task<bool> CheckoutBranchAsync(int id, string branchName, bool createNew = false, string? trackRemoteBranch = null)
     {
         var config = await GetByIdAsync(id);
         if (config == null || config.CloneStatus != CloneStatus.Cloned)
@@ -194,58 +232,22 @@ public class GitRepositoryService : IGitRepositoryService
             
             if (createNew)
             {
-                await ExecuteGitCommandAsync(fullPath, $"checkout -b {branchName}");
-            }
-            else
-            {
-                // Check if this is a remote branch reference (e.g., "remotes/origin/develop" or "origin/develop")
-                var isRemoteBranch = branchName.StartsWith("remotes/") || 
-                                     (branchName.StartsWith("origin/") && !branchName.Contains("HEAD"));
-                
-                if (isRemoteBranch)
+                // Creating a new branch
+                if (!string.IsNullOrEmpty(trackRemoteBranch))
                 {
-                    // Extract the local branch name from the remote reference
-                    string localBranchName;
-                    if (branchName.StartsWith("remotes/origin/"))
-                    {
-                        localBranchName = branchName.Substring("remotes/origin/".Length);
-                    }
-                    else if (branchName.StartsWith("origin/"))
-                    {
-                        localBranchName = branchName.Substring("origin/".Length);
-                    }
-                    else
-                    {
-                        // For other remotes like "remotes/upstream/branch"
-                        var parts = branchName.Split('/');
-                        localBranchName = parts.Length > 2 ? parts[^1] : branchName;
-                    }
-                    
-                    // Check if a local branch with this name already exists
-                    var localBranchesOutput = await ExecuteGitCommandAsync(fullPath, "branch --list");
-                    var localBranches = localBranchesOutput
-                        .Split('\n', StringSplitOptions.RemoveEmptyEntries)
-                        .Select(b => b.Trim().TrimStart('*').Trim())
-                        .ToList();
-                    
-                    if (localBranches.Contains(localBranchName))
-                    {
-                        // Local branch exists, just check it out
-                        await ExecuteGitCommandAsync(fullPath, $"checkout {localBranchName}");
-                    }
-                    else
-                    {
-                        // Create a new local tracking branch
-                        await ExecuteGitCommandAsync(fullPath, $"checkout -b {localBranchName} --track {branchName}");
-                    }
-                    
-                    branchName = localBranchName;
+                    // Create new branch tracking a remote branch
+                    await ExecuteGitCommandAsync(fullPath, $"checkout -b {branchName} --track {trackRemoteBranch}");
                 }
                 else
                 {
-                    // Regular local branch checkout
-                    await ExecuteGitCommandAsync(fullPath, $"checkout {branchName}");
+                    // Create new independent branch
+                    await ExecuteGitCommandAsync(fullPath, $"checkout -b {branchName}");
                 }
+            }
+            else
+            {
+                // Checkout existing local branch
+                await ExecuteGitCommandAsync(fullPath, $"checkout {branchName}");
             }
             
             config.CurrentBranch = branchName;

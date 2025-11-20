@@ -157,14 +157,14 @@
 @if (showBranchModal)
 {
     <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Switch Branch</h5>
+                    <h5 class="modal-title">Branch Manager</h5>
                     <button type="button" class="btn-close" @onclick="HideBranchModal"></button>
                 </div>
                 <div class="modal-body">
-                    @if (branches == null)
+                    @if (localBranches == null || remoteBranches == null)
                     {
                         <div class="text-center">
                             <div class="spinner-border spinner-border-sm" role="status"></div>
@@ -172,27 +172,76 @@
                     }
                     else
                     {
+                        <!-- Branch Mode Selection -->
                         <div class="mb-3">
-                            <label class="form-label">Search or create branch</label>
-                            <input type="text" class="form-control" @bind="branchSearchText" 
-                                   @oninput="OnBranchSearchInput" placeholder="Type to search..." />
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="branchMode" id="checkoutMode" 
+                                       checked="@(!isCreateMode)" @onchange="() => SetBranchMode(false)">
+                                <label class="btn btn-outline-primary" for="checkoutMode">
+                                    <i class="bi bi-arrow-right-circle"></i> Checkout Existing Branch
+                                </label>
+                                
+                                <input type="radio" class="btn-check" name="branchMode" id="createMode"
+                                       checked="@isCreateMode" @onchange="() => SetBranchMode(true)">
+                                <label class="btn btn-outline-success" for="createMode">
+                                    <i class="bi bi-plus-circle"></i> Create New Branch
+                                </label>
+                            </div>
                         </div>
-                        <div class="list-group" style="max-height: 300px; overflow-y: auto;">
-                            @if (!string.IsNullOrWhiteSpace(branchSearchText) && !filteredBranches.Any(b => b == branchSearchText))
-                            {
-                                <button class="list-group-item list-group-item-action" 
-                                        @onclick="() => CreateAndCheckoutBranch(branchSearchText)">
-                                    <i class="bi bi-plus-circle text-success"></i> Create new branch: <strong>@branchSearchText</strong>
+
+                        @if (!isCreateMode)
+                        {
+                            <!-- Checkout Mode -->
+                            <div class="mb-3">
+                                <label class="form-label">Select a local branch to checkout</label>
+                                <div class="list-group" style="max-height: 300px; overflow-y: auto;">
+                                    @if (!localBranches.Any())
+                                    {
+                                        <div class="list-group-item text-muted">
+                                            <i class="bi bi-info-circle"></i> No local branches found. Create a new branch to get started.
+                                        </div>
+                                    }
+                                    @foreach (var branch in localBranches)
+                                    {
+                                        <button class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" 
+                                                @onclick="() => CheckoutBranch(branch)">
+                                            <span><i class="bi bi-git"></i> @branch</span>
+                                            <i class="bi bi-arrow-right"></i>
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <!-- Create Mode -->
+                            <div class="mb-3">
+                                <label class="form-label">New branch name</label>
+                                <input type="text" class="form-control" @bind="newBranchName" 
+                                       placeholder="Enter branch name (e.g., feature/new-feature)" />
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Track remote branch (optional)</label>
+                                <select class="form-select" @bind="selectedRemoteBranch">
+                                    <option value="">-- None (create independent branch) --</option>
+                                    @foreach (var remoteBranch in remoteBranches)
+                                    {
+                                        <option value="@remoteBranch">@remoteBranch</option>
+                                    }
+                                </select>
+                                <small class="form-text text-muted">
+                                    Select a remote branch to track, or leave empty to create an independent local branch.
+                                </small>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button class="btn btn-success" @onclick="CreateBranch" 
+                                        disabled="@string.IsNullOrWhiteSpace(newBranchName)">
+                                    <i class="bi bi-plus-circle"></i> Create Branch
                                 </button>
-                            }
-                            @foreach (var branch in filteredBranches)
-                            {
-                                <button class="list-group-item list-group-item-action" 
-                                        @onclick="() => CheckoutBranch(branch)">
-                                    @branch
-                                </button>
-                            }
-                        </div>
+                            </div>
+                        }
                     }
                 </div>
                 <div class="modal-footer">
@@ -208,11 +257,13 @@
     private bool showAddModal = false;
     private bool showBranchModal = false;
     private int selectedRepoId = 0;
-    private List<string>? branches;
-    private List<string> filteredBranches = new();
-    private string branchSearchText = "";
+    private List<string>? localBranches;
+    private List<string>? remoteBranches;
     private bool autoFetchEnabled = false;
     private int autoFetchIntervalMinutes = 5;
+    private bool isCreateMode = false;
+    private string newBranchName = "";
+    private string selectedRemoteBranch = "";
     
     private GitRepositoryConfiguration newRepo = new()
     {
@@ -275,41 +326,47 @@
     {
         selectedRepoId = repoId;
         showBranchModal = true;
-        branches = null;
-        branchSearchText = "";
+        localBranches = null;
+        remoteBranches = null;
+        isCreateMode = false;
+        newBranchName = "";
+        selectedRemoteBranch = "";
         
-        branches = await GitRepoService.GetBranchesAsync(repoId);
-        filteredBranches = branches;
+        var (local, remote) = await GitRepoService.GetLocalAndRemoteBranchesAsync(repoId);
+        localBranches = local;
+        remoteBranches = remote;
     }
 
     private void HideBranchModal()
     {
         showBranchModal = false;
         selectedRepoId = 0;
-        branches = null;
+        localBranches = null;
+        remoteBranches = null;
+        isCreateMode = false;
+        newBranchName = "";
+        selectedRemoteBranch = "";
     }
 
-    private void OnBranchSearchInput(ChangeEventArgs e)
+    private void SetBranchMode(bool createMode)
     {
-        branchSearchText = e.Value?.ToString() ?? "";
-        if (branches != null)
-        {
-            filteredBranches = branches
-                .Where(b => b.Contains(branchSearchText, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-        }
+        isCreateMode = createMode;
     }
 
     private async Task CheckoutBranch(string branchName)
     {
-        await GitRepoService.CheckoutBranchAsync(selectedRepoId, branchName);
+        await GitRepoService.CheckoutBranchAsync(selectedRepoId, branchName, createNew: false);
         await RefreshStatus(selectedRepoId);
         HideBranchModal();
     }
 
-    private async Task CreateAndCheckoutBranch(string branchName)
+    private async Task CreateBranch()
     {
-        await GitRepoService.CheckoutBranchAsync(selectedRepoId, branchName, createNew: true);
+        if (string.IsNullOrWhiteSpace(newBranchName))
+            return;
+            
+        var trackRemote = string.IsNullOrWhiteSpace(selectedRemoteBranch) ? null : selectedRemoteBranch;
+        await GitRepoService.CheckoutBranchAsync(selectedRepoId, newBranchName, createNew: true, trackRemoteBranch: trackRemote);
         await RefreshStatus(selectedRepoId);
         HideBranchModal();
     }
