@@ -24,7 +24,26 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
 var codeBasePath = Environment.GetEnvironmentVariable("CODE_BASE_PATH") ?? "/workspace";
 
 // Get the database path from environment variable or use default
-var dbPath = Environment.GetEnvironmentVariable("DB_PATH") ?? "/data/devbuddy.db";
+var dbPath = Environment.GetEnvironmentVariable("DB_PATH");
+if (string.IsNullOrEmpty(dbPath))
+{
+    // Check if /data directory exists and is writable, otherwise use temp
+    if (Directory.Exists("/data") && IsDirectoryWritable("/data"))
+    {
+        dbPath = "/data/devbuddy.db";
+    }
+    else
+    {
+        dbPath = Path.Combine(Path.GetTempPath(), "devbuddy.db");
+    }
+}
+
+// Ensure the database directory exists
+var dbDirectory = Path.GetDirectoryName(dbPath);
+if (!string.IsNullOrEmpty(dbDirectory) && !Directory.Exists(dbDirectory))
+{
+    Directory.CreateDirectory(dbDirectory);
+}
 
 // Load command execution options from configuration
 var commandExecutionOptions = new CommandExecutionOptions();
@@ -79,13 +98,29 @@ app.UseAntiforgery();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-// Map MCP endpoints to /mcp path
-app.MapMcp("/mcp");
+// Map MCP endpoints
+app.MapMcp();
 
 // Health check endpoint
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", codeBasePath }));
 
 app.Run();
+
+// Helper method to check if directory is writable
+static bool IsDirectoryWritable(string dirPath)
+{
+    try
+    {
+        var testFile = Path.Combine(dirPath, Path.GetRandomFileName());
+        using (File.Create(testFile)) { }
+        File.Delete(testFile);
+        return true;
+    }
+    catch
+    {
+        return false;
+    }
+}
 
 // Make Program class accessible to tests
 public partial class Program { }
