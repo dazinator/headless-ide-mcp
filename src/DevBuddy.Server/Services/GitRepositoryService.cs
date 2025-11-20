@@ -198,7 +198,54 @@ public class GitRepositoryService : IGitRepositoryService
             }
             else
             {
-                await ExecuteGitCommandAsync(fullPath, $"checkout {branchName}");
+                // Check if this is a remote branch reference (e.g., "remotes/origin/develop" or "origin/develop")
+                var isRemoteBranch = branchName.StartsWith("remotes/") || 
+                                     (branchName.StartsWith("origin/") && !branchName.Contains("HEAD"));
+                
+                if (isRemoteBranch)
+                {
+                    // Extract the local branch name from the remote reference
+                    string localBranchName;
+                    if (branchName.StartsWith("remotes/origin/"))
+                    {
+                        localBranchName = branchName.Substring("remotes/origin/".Length);
+                    }
+                    else if (branchName.StartsWith("origin/"))
+                    {
+                        localBranchName = branchName.Substring("origin/".Length);
+                    }
+                    else
+                    {
+                        // For other remotes like "remotes/upstream/branch"
+                        var parts = branchName.Split('/');
+                        localBranchName = parts.Length > 2 ? parts[^1] : branchName;
+                    }
+                    
+                    // Check if a local branch with this name already exists
+                    var localBranchesOutput = await ExecuteGitCommandAsync(fullPath, "branch --list");
+                    var localBranches = localBranchesOutput
+                        .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(b => b.Trim().TrimStart('*').Trim())
+                        .ToList();
+                    
+                    if (localBranches.Contains(localBranchName))
+                    {
+                        // Local branch exists, just check it out
+                        await ExecuteGitCommandAsync(fullPath, $"checkout {localBranchName}");
+                    }
+                    else
+                    {
+                        // Create a new local tracking branch
+                        await ExecuteGitCommandAsync(fullPath, $"checkout -b {localBranchName} --track {branchName}");
+                    }
+                    
+                    branchName = localBranchName;
+                }
+                else
+                {
+                    // Regular local branch checkout
+                    await ExecuteGitCommandAsync(fullPath, $"checkout {branchName}");
+                }
             }
             
             config.CurrentBranch = branchName;
