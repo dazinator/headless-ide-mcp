@@ -75,12 +75,12 @@ app.UseApiKeyAuthentication();
 app.UseStaticFiles();
 app.UseAntiforgery();
 
-// Map Blazor components
+// Map Blazor components first
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-// Map MCP endpoints
-app.MapMcp();
+// Map MCP endpoints to /mcp path
+app.MapMcp("/mcp");
 
 // Health check endpoint
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", codeBasePath }));
