@@ -397,9 +397,15 @@ public class GitRepositoryService : IGitRepositoryService
         var baseName = string.IsNullOrEmpty(dirName) ? "imported-repo" : dirName;
         
         // Ensure unique name (handle case where multiple repos have same directory name)
+        // Fetch all existing names that start with baseName in a single query to avoid N+1
+        var existingNames = await _context.GitRepositories
+            .Where(r => r.Name.StartsWith(baseName))
+            .Select(r => r.Name)
+            .ToListAsync();
+        
         var repoName = baseName;
         var counter = 1;
-        while (await _context.GitRepositories.AnyAsync(r => r.Name == repoName))
+        while (existingNames.Contains(repoName))
         {
             repoName = $"{baseName}-{counter}";
             counter++;
@@ -422,20 +428,45 @@ public class GitRepositoryService : IGitRepositoryService
             remoteUrl = null;
         }
         
-        // Create the configuration
-        var config = new GitRepositoryConfiguration
-        {
-            Name = repoName,
-            RemoteUrl = remoteUrl,
-            LocalPath = relativePath,
-            CloneStatus = CloneStatus.Cloned,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-            LastChecked = DateTime.UtcNow
-        };
+        // Create the configuration with retry logic to handle race condition on unique name constraint
+        GitRepositoryConfiguration config;
+        var maxRetries = 3;
+        var attempt = 0;
         
-        _context.GitRepositories.Add(config);
-        await _context.SaveChangesAsync();
+        while (true)
+        {
+            attempt++;
+            config = new GitRepositoryConfiguration
+            {
+                Name = repoName,
+                RemoteUrl = remoteUrl,
+                LocalPath = relativePath,
+                CloneStatus = CloneStatus.Cloned,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                LastChecked = DateTime.UtcNow
+            };
+            
+            _context.GitRepositories.Add(config);
+            
+            try
+            {
+                await _context.SaveChangesAsync();
+                break; // Success, exit the retry loop
+            }
+            catch (DbUpdateException ex) when (attempt < maxRetries)
+            {
+                // Handle unique constraint violation due to race condition
+                _context.GitRepositories.Remove(config);
+                
+                // Regenerate name with higher counter
+                repoName = $"{baseName}-{counter}";
+                counter++;
+                
+                _logger.LogWarning(ex, "Name collision detected for {RepoName}, retrying with {NewName}", 
+                    config.Name, repoName);
+            }
+        }
         
         // Update status to populate current branch and other details
         await CheckRepositoryStatusAsync(config.Id);
