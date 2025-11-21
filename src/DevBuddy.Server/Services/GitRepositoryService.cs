@@ -397,9 +397,9 @@ public class GitRepositoryService : IGitRepositoryService
         var baseName = string.IsNullOrEmpty(dirName) ? "imported-repo" : dirName;
         
         // Ensure unique name (handle case where multiple repos have same directory name)
-        // Fetch all existing names that start with baseName in a single query to avoid N+1
+        // Fetch all existing names that match baseName or baseName-N pattern in a single query to avoid N+1
         var existingNames = await _context.GitRepositories
-            .Where(r => r.Name.StartsWith(baseName))
+            .Where(r => r.Name == baseName || r.Name.StartsWith(baseName + "-"))
             .Select(r => r.Name)
             .ToListAsync();
         
@@ -431,11 +431,9 @@ public class GitRepositoryService : IGitRepositoryService
         // Create the configuration with retry logic to handle race condition on unique name constraint
         GitRepositoryConfiguration config;
         var maxRetries = 3;
-        var attempt = 0;
         
-        while (true)
+        for (var attempt = 1; attempt <= maxRetries; attempt++)
         {
-            attempt++;
             config = new GitRepositoryConfiguration
             {
                 Name = repoName,
@@ -452,26 +450,34 @@ public class GitRepositoryService : IGitRepositoryService
             try
             {
                 await _context.SaveChangesAsync();
-                break; // Success, exit the retry loop
+                
+                // Success - update status and return
+                await CheckRepositoryStatusAsync(config.Id);
+                return await GetByIdAsync(config.Id) ?? config;
             }
-            catch (DbUpdateException ex) when (attempt < maxRetries)
+            catch (DbUpdateException ex)
             {
                 // Handle unique constraint violation due to race condition
                 _context.GitRepositories.Remove(config);
                 
-                // Regenerate name with higher counter
+                if (attempt >= maxRetries)
+                {
+                    // Final attempt failed, throw the exception
+                    throw new InvalidOperationException(
+                        $"Failed to import repository after {maxRetries} attempts due to name conflicts. " +
+                        $"Last attempted name: {repoName}", ex);
+                }
+                
+                // Regenerate name with higher counter for next attempt
                 repoName = $"{baseName}-{counter}";
                 counter++;
                 
-                _logger.LogWarning(ex, "Name collision detected for {RepoName}, retrying with {NewName}", 
-                    config.Name, repoName);
+                _logger.LogWarning(ex, "Name collision detected for {RepoName}, retrying with {NewName} (attempt {Attempt}/{MaxRetries})", 
+                    config.Name, repoName, attempt, maxRetries);
             }
         }
         
-        // Update status to populate current branch and other details
-        await CheckRepositoryStatusAsync(config.Id);
-        
-        // Reload to get updated values
-        return await GetByIdAsync(config.Id) ?? config;
+        // This should never be reached due to the throw in the catch block, but required for compilation
+        throw new InvalidOperationException("Unexpected error during repository import");
     }
 }
