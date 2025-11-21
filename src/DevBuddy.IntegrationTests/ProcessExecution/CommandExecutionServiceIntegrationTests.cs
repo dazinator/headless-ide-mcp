@@ -250,6 +250,57 @@ public class CommandExecutionServiceIntegrationTests : IDisposable
         });
     }
 
+    [Fact]
+    public async Task ExecuteAsync_WithGitReposPath_WorksWhenConfiguredInAllowedPaths()
+    {
+        // Arrange - Create a test directory in /tmp to simulate a custom allowed path (like /git-repos)
+        // We use a temp directory for the test since /git-repos may not exist in all test environments
+        var gitReposTestDir = Path.Combine(Path.GetTempPath(), $"git-repos-test-{Guid.NewGuid()}");
+        Directory.CreateDirectory(gitReposTestDir);
+        
+        try
+        {
+            // Create service with custom options that include the git-repos test directory
+            var options = new CommandExecutionOptions
+            {
+                AllowedPaths = new List<string> { _testDirectory, "/tmp", gitReposTestDir }
+            };
+            var serviceWithGitRepos = new CommandExecutionService(_testDirectory, options);
+            
+            var request = new ExecutionRequest
+            {
+                Command = "echo",
+                Arguments = new[] { "test from git-repos" },
+                WorkingDirectory = gitReposTestDir,
+                TimeoutSeconds = 5
+            };
+
+            // Act
+            var result = await serviceWithGitRepos.ExecuteAsync(request);
+
+            // Assert
+            result.ShouldNotBeNull();
+            result.ExitCode.ShouldBe(0);
+            result.Stdout.ShouldContain("test from git-repos");
+            result.TimedOut.ShouldBeFalse();
+        }
+        finally
+        {
+            // Clean up
+            if (Directory.Exists(gitReposTestDir))
+            {
+                try
+                {
+                    Directory.Delete(gitReposTestDir, recursive: true);
+                }
+                catch
+                {
+                    // Best effort cleanup
+                }
+            }
+        }
+    }
+
     public void Dispose()
     {
         // Clean up test directory
