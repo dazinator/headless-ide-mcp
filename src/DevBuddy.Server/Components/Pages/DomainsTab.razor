@@ -1,0 +1,280 @@
+@using DevBuddy.Server.Data.Models
+@using DevBuddy.Server.Services
+@inject IDomainService DomainService
+@inject IJSRuntime JSRuntime
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Domains</h5>
+                <button class="btn btn-sm btn-primary" @onclick="ShowCreateDomainModal">
+                    <i class="bi bi-plus-circle"></i> Add Domain
+                </button>
+            </div>
+            <div class="card-body">
+                @if (domains == null)
+                {
+                    <p><em>Loading domains...</em></p>
+                }
+                else if (!domains.Any())
+                {
+                    <p class="text-muted">No domains found. Create one to get started.</p>
+                }
+                else
+                {
+                    <div class="list-group">
+                        @foreach (var domain in GetRootDomains())
+                        {
+                            <DomainTreeItem Domain="domain" 
+                                          AllDomains="domains" 
+                                          OnSelect="SelectDomain" 
+                                          OnEdit="EditDomain"
+                                          OnDelete="DeleteDomain" />
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        @if (selectedDomain != null)
+        {
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Node Types for @selectedDomain.Name</h5>
+                    <button class="btn btn-sm btn-primary" @onclick="ShowCreateNodeTypeModal">
+                        <i class="bi bi-plus-circle"></i> Add Node Type
+                    </button>
+                </div>
+                <div class="card-body">
+                    @if (nodeTypes == null)
+                    {
+                        <p><em>Loading node types...</em></p>
+                    }
+                    else if (!nodeTypes.Any())
+                    {
+                        <p class="text-muted">No node types defined. Create one to get started.</p>
+                    }
+                    else
+                    {
+                        <div class="list-group">
+                            @foreach (var nodeType in nodeTypes)
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>@nodeType.Name</strong>
+                                            @if (!string.IsNullOrEmpty(nodeType.Description))
+                                            {
+                                                <p class="mb-0 text-muted small">@nodeType.Description</p>
+                                            }
+                                        </div>
+                                        <button class="btn btn-sm btn-danger" @onclick="() => DeleteNodeType(nodeType.Id)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card">
+                <div class="card-body text-center text-muted">
+                    <i class="bi bi-folder-tree" style="font-size: 3rem;"></i>
+                    <p class="mt-3">Select a domain to view its node types</p>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@* Domain Create/Edit Modal *@
+@if (showDomainModal)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@(editingDomain?.Id > 0 ? "Edit" : "Create") Domain</h5>
+                    <button type="button" class="btn-close" @onclick="HideDomainModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Name</label>
+                        <input type="text" class="form-control" @bind="editingDomain!.Name" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" @bind="editingDomain!.Description" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Parent Domain</label>
+                        <select class="form-select" @bind="editingDomain!.ParentDomainId">
+                            <option value="">None</option>
+                            @if (domains != null)
+                            {
+                                @foreach (var domain in domains.Where(d => d.Id != editingDomain.Id))
+                                {
+                                    <option value="@domain.Id">@domain.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="HideDomainModal">Cancel</button>
+                    <button type="button" class="btn btn-primary" @onclick="SaveDomain">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* NodeType Create Modal *@
+@if (showNodeTypeModal)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Node Type</h5>
+                    <button type="button" class="btn-close" @onclick="HideNodeTypeModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Name</label>
+                        <input type="text" class="form-control" @bind="newNodeType!.Name" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" @bind="newNodeType!.Description" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="HideNodeTypeModal">Cancel</button>
+                    <button type="button" class="btn btn-primary" @onclick="SaveNodeType">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Domain>? domains;
+    private List<NodeType>? nodeTypes;
+    private Domain? selectedDomain;
+    private bool showDomainModal;
+    private bool showNodeTypeModal;
+    private Domain? editingDomain;
+    private NodeType? newNodeType;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDomains();
+    }
+
+    private async Task LoadDomains()
+    {
+        domains = await DomainService.GetAllDomainsAsync();
+    }
+
+    private IEnumerable<Domain> GetRootDomains()
+    {
+        return domains?.Where(d => d.ParentDomainId == null) ?? Enumerable.Empty<Domain>();
+    }
+
+    private async Task SelectDomain(Domain domain)
+    {
+        selectedDomain = domain;
+        nodeTypes = await DomainService.GetNodeTypesForDomainAsync(domain.Id);
+    }
+
+    private void ShowCreateDomainModal()
+    {
+        editingDomain = new Domain();
+        showDomainModal = true;
+    }
+
+    private void EditDomain(Domain domain)
+    {
+        editingDomain = domain;
+        showDomainModal = true;
+    }
+
+    private void HideDomainModal()
+    {
+        showDomainModal = false;
+        editingDomain = null;
+    }
+
+    private async Task SaveDomain()
+    {
+        if (editingDomain == null) return;
+
+        if (editingDomain.Id > 0)
+        {
+            await DomainService.UpdateDomainAsync(editingDomain);
+        }
+        else
+        {
+            await DomainService.CreateDomainAsync(editingDomain);
+        }
+
+        await LoadDomains();
+        HideDomainModal();
+    }
+
+    private async Task DeleteDomain(int domainId)
+    {
+        if (await JSRuntime.InvokeAsync<bool>("confirm", new object[] { "Are you sure you want to delete this domain?" }))
+        {
+            await DomainService.DeleteDomainAsync(domainId);
+            await LoadDomains();
+            if (selectedDomain?.Id == domainId)
+            {
+                selectedDomain = null;
+                nodeTypes = null;
+            }
+        }
+    }
+
+    private void ShowCreateNodeTypeModal()
+    {
+        if (selectedDomain == null) return;
+        newNodeType = new NodeType { DomainId = selectedDomain.Id };
+        showNodeTypeModal = true;
+    }
+
+    private void HideNodeTypeModal()
+    {
+        showNodeTypeModal = false;
+        newNodeType = null;
+    }
+
+    private async Task SaveNodeType()
+    {
+        if (newNodeType == null || selectedDomain == null) return;
+
+        await DomainService.CreateNodeTypeAsync(newNodeType);
+        nodeTypes = await DomainService.GetNodeTypesForDomainAsync(selectedDomain.Id);
+        HideNodeTypeModal();
+    }
+
+    private async Task DeleteNodeType(int nodeTypeId)
+    {
+        if (await JSRuntime.InvokeAsync<bool>("confirm", new object[] { "Are you sure you want to delete this node type?" }))
+        {
+            await DomainService.DeleteNodeTypeAsync(nodeTypeId);
+            if (selectedDomain != null)
+            {
+                nodeTypes = await DomainService.GetNodeTypesForDomainAsync(selectedDomain.Id);
+            }
+        }
+    }
+}

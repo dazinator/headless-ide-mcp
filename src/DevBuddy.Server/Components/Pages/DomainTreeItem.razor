@@ -1,0 +1,64 @@
+@using DevBuddy.Server.Data.Models
+
+<div class="list-group-item">
+    <div class="d-flex justify-content-between align-items-center">
+        <div class="flex-grow-1" style="cursor: pointer;" @onclick="() => OnSelect.InvokeAsync(Domain)">
+            @if (HasChildren())
+            {
+                <i class="bi @(isExpanded ? "bi-chevron-down" : "bi-chevron-right")" @onclick:stopPropagation="true" @onclick="ToggleExpanded"></i>
+            }
+            <strong>@Domain.Name</strong>
+            @if (!string.IsNullOrEmpty(Domain.Description))
+            {
+                <p class="mb-0 text-muted small">@Domain.Description</p>
+            }
+        </div>
+        <div class="btn-group btn-group-sm">
+            <button class="btn btn-outline-primary" @onclick:stopPropagation="true" @onclick="() => OnEdit.InvokeAsync(Domain)">
+                <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-outline-danger" @onclick:stopPropagation="true" @onclick="() => OnDelete.InvokeAsync(Domain.Id)">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+    </div>
+    
+    @if (isExpanded && HasChildren())
+    {
+        <div class="ms-4 mt-2">
+            @foreach (var child in GetChildren())
+            {
+                <DomainTreeItem Domain="child" 
+                              AllDomains="AllDomains" 
+                              OnSelect="OnSelect" 
+                              OnEdit="OnEdit"
+                              OnDelete="OnDelete" />
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Domain Domain { get; set; } = null!;
+    [Parameter] public List<Domain> AllDomains { get; set; } = null!;
+    [Parameter] public EventCallback<Domain> OnSelect { get; set; }
+    [Parameter] public EventCallback<Domain> OnEdit { get; set; }
+    [Parameter] public EventCallback<int> OnDelete { get; set; }
+
+    private bool isExpanded = false;
+
+    private bool HasChildren()
+    {
+        return AllDomains?.Any(d => d.ParentDomainId == Domain.Id) ?? false;
+    }
+
+    private IEnumerable<Domain> GetChildren()
+    {
+        return AllDomains?.Where(d => d.ParentDomainId == Domain.Id) ?? Enumerable.Empty<Domain>();
+    }
+
+    private void ToggleExpanded()
+    {
+        isExpanded = !isExpanded;
+    }
+}
