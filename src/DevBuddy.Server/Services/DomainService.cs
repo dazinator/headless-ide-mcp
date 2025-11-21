@@ -118,9 +118,7 @@ public class DomainService : IDomainService
                 {
                     new NodeType { DomainId = generalDomain.Id, Name = "Project", Description = "A project or initiative" },
                     new NodeType { DomainId = generalDomain.Id, Name = "Goal", Description = "A goal or objective" },
-                    new NodeType { DomainId = generalDomain.Id, Name = "Idea", Description = "An idea or concept" },
-                    new NodeType { DomainId = generalDomain.Id, Name = "Habit", Description = "A habit or routine" },
-                    new NodeType { DomainId = generalDomain.Id, Name = "Person", Description = "A person or contact" }
+                    new NodeType { DomainId = generalDomain.Id, Name = "Idea", Description = "An idea or concept" }
                 };
                 _context.NodeTypes.AddRange(defaultNodeTypes);
                 await _context.SaveChangesAsync();
@@ -131,11 +129,8 @@ public class DomainService : IDomainService
                 {
                     var defaultEdgeTypes = new[]
                     {
-                        new EdgeType { Name = "relates_to", Description = "Generic relationship" },
-                        new EdgeType { Name = "depends_on", Description = "Dependency relationship" },
-                        new EdgeType { Name = "contributes_to", Description = "Contribution relationship" },
-                        new EdgeType { Name = "part_of", Description = "Part-of relationship" },
-                        new EdgeType { Name = "sequence_next", Description = "Sequential relationship" }
+                        new EdgeType { Name = "relates_to", Description = "Captures adjacency: conceptual, semantic, thematic, contextual, informational" },
+                        new EdgeType { Name = "depends_on", Description = "Directional causal or structural requirement" }
                     };
                     _context.EdgeTypes.AddRange(defaultEdgeTypes);
                     await _context.SaveChangesAsync();
