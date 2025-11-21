@@ -414,7 +414,6 @@ public class GitRepositoryService : IGitRepositoryService
         }
         
         // Create the configuration with retry logic to handle race condition on unique name constraint
-        GitRepositoryConfiguration config;
         var maxRetries = 3;
         const int maxCounter = 1000; // Safety limit to prevent infinite loop
         
@@ -445,7 +444,7 @@ public class GitRepositoryService : IGitRepositoryService
                     $"Unable to find unique name for repository '{baseName}' - too many similar names exist (>{maxCounter})");
             }
             
-            config = new GitRepositoryConfiguration
+            var config = new GitRepositoryConfiguration
             {
                 Name = repoName,
                 RemoteUrl = remoteUrl,
@@ -484,10 +483,7 @@ public class GitRepositoryService : IGitRepositoryService
             }
         }
         
-#pragma warning disable CS0162 // Unreachable code detected
         // Should never reach here - loop always returns on success or throws on final failure
-        // This is required for compiler to recognize all code paths return/throw
         throw new InvalidOperationException("Unexpected end of import loop");
-#pragma warning restore CS0162
     }
 }
