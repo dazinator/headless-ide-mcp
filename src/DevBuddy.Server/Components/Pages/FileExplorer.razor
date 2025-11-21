@@ -235,7 +235,7 @@
         NavigationManager.NavigateTo(url);
     }
 
-    private void ViewFile(FileExplorerItem file)
+    private async Task ViewFile(FileExplorerItem file)
     {
         if (file.Size > MaxFileSizeWithoutWarning)
         {
@@ -244,7 +244,7 @@
         }
         else
         {
-            LoadAndShowFile(file);
+            await LoadAndShowFile(file);
         }
     }
 
@@ -254,17 +254,17 @@
         pendingViewFile = null;
     }
 
-    private void ProceedViewFile()
+    private async Task ProceedViewFile()
     {
         if (pendingViewFile != null)
         {
             showSizeWarning = false;
-            LoadAndShowFile(pendingViewFile);
+            await LoadAndShowFile(pendingViewFile);
             pendingViewFile = null;
         }
     }
 
-    private async void LoadAndShowFile(FileExplorerItem file)
+    private async Task LoadAndShowFile(FileExplorerItem file)
     {
         selectedFile = file;
         showViewModal = true;
@@ -277,14 +277,24 @@
         {
             var bytes = await FileExplorerService.ReadFileAsync(file.RelativePath);
             
-            // Try to decode as text
+            // Try to decode as text with better error handling
             try
             {
-                fileContent = System.Text.Encoding.UTF8.GetString(bytes);
+                // Check if file contains null bytes (likely binary)
+                if (Array.IndexOf(bytes, (byte)0) >= 0)
+                {
+                    fileViewError = "This file appears to be binary and cannot be displayed as text.";
+                }
+                else
+                {
+                    // Use encoding with replacement fallback for invalid sequences
+                    var encoding = new System.Text.UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: false);
+                    fileContent = encoding.GetString(bytes);
+                }
             }
-            catch
+            catch (Exception ex)
             {
-                fileViewError = "This file appears to be binary and cannot be displayed as text.";
+                fileViewError = $"Error decoding file: {ex.Message}";
             }
         }
         catch (Exception ex)
@@ -306,7 +316,7 @@
         fileViewError = null;
     }
 
-    private async void DownloadFile(FileExplorerItem file)
+    private async Task DownloadFile(FileExplorerItem file)
     {
         try
         {

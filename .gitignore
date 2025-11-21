@@ -338,4 +338,7 @@ site
 # Environment files with secrets
 .env
 .env.local
-.env.*.localgit-repos/
+.env.*.local
+
+# Git repositories directory
+git-repos/

@@ -128,7 +128,7 @@ public class FileExplorerService : IFileExplorerService
         fullPath = Path.GetFullPath(fullPath);
         
         // Security check: ensure the resolved path is within base path
-        if (!fullPath.StartsWith(_basePath, StringComparison.OrdinalIgnoreCase))
+        if (!fullPath.StartsWith(_basePath, StringComparison.Ordinal))
         {
             throw new UnauthorizedAccessException($"Access to path '{path}' is denied");
         }
@@ -138,7 +138,7 @@ public class FileExplorerService : IFileExplorerService
 
     private string GetRelativePath(string fullPath)
     {
-        if (fullPath.StartsWith(_basePath, StringComparison.OrdinalIgnoreCase))
+        if (fullPath.StartsWith(_basePath, StringComparison.Ordinal))
         {
             var relativePath = fullPath.Substring(_basePath.Length);
             return relativePath.TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
