@@ -144,8 +144,23 @@ public class GitRepositoryService : IGitRepositoryService
 
     private async Task UpdateRepositoryStatusDetails(GitRepositoryConfiguration config, string fullPath)
     {
-        // Get current branch
-        config.CurrentBranch = await ExecuteGitCommandAsync(fullPath, "rev-parse --abbrev-ref HEAD");
+        // Get current branch (handle fresh repos with no commits)
+        try
+        {
+            config.CurrentBranch = await ExecuteGitCommandAsync(fullPath, "rev-parse --abbrev-ref HEAD");
+        }
+        catch
+        {
+            // Fresh repository with no commits - try to get default branch name
+            try
+            {
+                config.CurrentBranch = await ExecuteGitCommandAsync(fullPath, "symbolic-ref --short HEAD");
+            }
+            catch
+            {
+                config.CurrentBranch = null;
+            }
+        }
         
         // Check for uncommitted changes
         var statusOutput = await ExecuteGitCommandAsync(fullPath, "status --porcelain");
