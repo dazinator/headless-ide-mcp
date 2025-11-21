@@ -486,6 +486,29 @@ public class GitRepositoryServiceIntegrationTests : IDisposable
         exception.Message.ShouldContain("already imported");
     }
 
+    [Fact]
+    public async Task ImportExistingRepositoryAsync_WithDuplicateDirectoryNames_AssignsUniqueNames()
+    {
+        // Arrange - Create two repos with same directory name but different paths
+        var repo1Path = Path.Combine(_testDirectory, "parent1", "myrepo");
+        Directory.CreateDirectory(repo1Path);
+        ExecuteGit(repo1Path, "init");
+        
+        var repo2Path = Path.Combine(_testDirectory, "parent2", "myrepo");
+        Directory.CreateDirectory(repo2Path);
+        ExecuteGit(repo2Path, "init");
+
+        // Act - Import both repositories
+        var importedRepo1 = await _sut.ImportExistingRepositoryAsync("parent1/myrepo");
+        var importedRepo2 = await _sut.ImportExistingRepositoryAsync("parent2/myrepo");
+
+        // Assert - Names should be unique
+        importedRepo1.Name.ShouldBe("myrepo");
+        importedRepo2.Name.ShouldBe("myrepo-1");
+        importedRepo1.LocalPath.ShouldBe("parent1/myrepo");
+        importedRepo2.LocalPath.ShouldBe("parent2/myrepo");
+    }
+
     public void Dispose()
     {
         // Clean up test directory

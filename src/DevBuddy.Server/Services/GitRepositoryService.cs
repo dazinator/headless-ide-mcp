@@ -394,7 +394,33 @@ public class GitRepositoryService : IGitRepositoryService
         
         // Extract repository name from the path (last directory name)
         var dirName = Path.GetFileName(fullPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-        var repoName = string.IsNullOrEmpty(dirName) ? "imported-repo" : dirName;
+        var baseName = string.IsNullOrEmpty(dirName) ? "imported-repo" : dirName;
+        
+        // Ensure unique name (handle case where multiple repos have same directory name)
+        // Fetch all existing names that match baseName or baseName-N pattern in a single query to avoid N+1
+        var existingNamesList = await _context.GitRepositories
+            .Where(r => r.Name == baseName || r.Name.StartsWith(baseName + "-"))
+            .Select(r => r.Name)
+            .ToListAsync();
+        
+        // Convert to HashSet for O(1) lookup performance
+        var existingNames = new HashSet<string>(existingNamesList);
+        
+        var repoName = baseName;
+        var counter = 1;
+        const int maxCounter = 1000; // Safety limit to prevent infinite loop
+        
+        while (existingNames.Contains(repoName) && counter < maxCounter)
+        {
+            repoName = $"{baseName}-{counter}";
+            counter++;
+        }
+        
+        if (counter >= maxCounter)
+        {
+            throw new InvalidOperationException(
+                $"Unable to find unique name for repository '{baseName}' - too many similar names exist (>{maxCounter})");
+        }
         
         // Try to get remote URL
         string? remoteUrl = null;
@@ -413,25 +439,59 @@ public class GitRepositoryService : IGitRepositoryService
             remoteUrl = null;
         }
         
-        // Create the configuration
-        var config = new GitRepositoryConfiguration
+        // Create the configuration with retry logic to handle race condition on unique name constraint
+        GitRepositoryConfiguration config;
+        var maxRetries = 3;
+        
+        for (var attempt = 1; attempt <= maxRetries; attempt++)
         {
-            Name = repoName,
-            RemoteUrl = remoteUrl,
-            LocalPath = relativePath,
-            CloneStatus = CloneStatus.Cloned,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-            LastChecked = DateTime.UtcNow
-        };
+            config = new GitRepositoryConfiguration
+            {
+                Name = repoName,
+                RemoteUrl = remoteUrl,
+                LocalPath = relativePath,
+                CloneStatus = CloneStatus.Cloned,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                LastChecked = DateTime.UtcNow
+            };
+            
+            _context.GitRepositories.Add(config);
+            
+            try
+            {
+                await _context.SaveChangesAsync();
+                
+                // Success - update status and return
+                await CheckRepositoryStatusAsync(config.Id);
+                return await GetByIdAsync(config.Id) ?? config;
+            }
+            catch (DbUpdateException ex)
+            {
+                // Handle unique constraint violation due to race condition
+                _context.GitRepositories.Remove(config);
+                
+                if (attempt >= maxRetries)
+                {
+                    // Final attempt failed, throw the exception
+                    throw new InvalidOperationException(
+                        $"Failed to import repository after {maxRetries} attempts due to name conflicts. " +
+                        $"Last attempted name: {repoName}", ex);
+                }
+                
+                // Regenerate name with higher counter for next attempt
+                repoName = $"{baseName}-{counter}";
+                counter++;
+                
+                _logger.LogWarning(ex, "Name collision detected for {RepoName}, retrying with {NewName} (attempt {Attempt}/{MaxRetries})", 
+                    config.Name, repoName, attempt, maxRetries);
+            }
+        }
         
-        _context.GitRepositories.Add(config);
-        await _context.SaveChangesAsync();
-        
-        // Update status to populate current branch and other details
-        await CheckRepositoryStatusAsync(config.Id);
-        
-        // Reload to get updated values
-        return await GetByIdAsync(config.Id) ?? config;
+#pragma warning disable CS0162 // Unreachable code detected
+        // Should never reach here - loop always returns on success or throws on final failure
+        // This is required for compiler to recognize all code paths return/throw
+        throw new InvalidOperationException("Unexpected end of import loop");
+#pragma warning restore CS0162
     }
 }
