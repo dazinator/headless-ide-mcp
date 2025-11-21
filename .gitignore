@@ -339,3 +339,6 @@ site
 .env
 .env.local
 .env.*.local
+
+# Git repositories directory
+git-repos/

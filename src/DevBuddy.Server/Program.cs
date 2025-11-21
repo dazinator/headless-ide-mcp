@@ -64,6 +64,9 @@ builder.Services.AddDbContext<DevBuddyDbContext>(options =>
 // Add Git Repository Service
 builder.Services.AddScoped<IGitRepositoryService, GitRepositoryService>();
 
+// Add File Explorer Service
+builder.Services.AddScoped<IFileExplorerService, FileExplorerService>();
+
 // Add Blazor components
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();

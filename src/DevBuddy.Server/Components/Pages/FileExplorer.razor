@@ -1,0 +1,397 @@
+@page "/ui/file-explorer"
+@page "/ui/file-explorer/{*relativePath}"
+@rendermode InteractiveServer
+@using DevBuddy.Server.Services
+@using Microsoft.JSInterop
+@inject IFileExplorerService FileExplorerService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<PageTitle>File Explorer - DevBuddy</PageTitle>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-folder"></i> File Explorer</h2>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle"></i> @errorMessage
+        </div>
+    }
+    else
+    {
+        <!-- Breadcrumb Navigation -->
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="#" @onclick="() => NavigateToPath(string.Empty)" @onclick:preventDefault>
+                        <i class="bi bi-house-door"></i> Root
+                    </a>
+                </li>
+                @if (!string.IsNullOrEmpty(currentPath))
+                {
+                    var pathParts = currentPath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+                    var accumulatedPath = "";
+                    foreach (var part in pathParts)
+                    {
+                        accumulatedPath = string.IsNullOrEmpty(accumulatedPath) ? part : $"{accumulatedPath}/{part}";
+                        var pathToNavigate = accumulatedPath;
+                        <li class="breadcrumb-item">
+                            <a href="#" @onclick="() => NavigateToPath(pathToNavigate)" @onclick:preventDefault>@part</a>
+                        </li>
+                    }
+                }
+            </ol>
+        </nav>
+
+        <!-- File/Directory List -->
+        @if (items == null || !items.Any())
+        {
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> This directory is empty.
+            </div>
+        }
+        else
+        {
+            <div class="file-explorer-list">
+                <div class="list-group">
+                    @foreach (var item in items)
+                    {
+                        @if (item.IsDirectory)
+                        {
+                            <div class="list-group-item list-group-item-action">
+                                <div class="d-flex align-items-center">
+                                    <i class="@GetIconClass(item) me-2"></i>
+                                    <a href="#" @onclick="() => NavigateToPath(item.RelativePath)" @onclick:preventDefault class="text-decoration-none">
+                                        @item.Name
+                                    </a>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="list-group-item">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center file-info">
+                                        <i class="@GetIconClass(item) me-2"></i>
+                                        <span class="file-name me-3">@item.Name</span>
+                                        <span class="badge bg-secondary">@FormatFileSize(item.Size)</span>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        @if (IsViewableFile(item))
+                                        {
+                                            <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => ViewFile(item)">
+                                                <i class="bi bi-eye"></i> View
+                                            </button>
+                                        }
+                                        <button class="btn btn-sm btn-outline-secondary" @onclick="() => DownloadFile(item)">
+                                            <i class="bi bi-download"></i> Download
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="mt-1">
+                                    <small class="text-muted">@item.LastModified.ToString("g")</small>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@* File View Modal *@
+@if (showViewModal && selectedFile != null)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="@GetIconClass(selectedFile)"></i> @selectedFile.Name
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="CloseViewModal"></button>
+                </div>
+                <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                    @if (isLoadingFile)
+                    {
+                        <div class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading file...</span>
+                            </div>
+                        </div>
+                    }
+                    else if (!string.IsNullOrEmpty(fileViewError))
+                    {
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle"></i> @fileViewError
+                        </div>
+                    }
+                    else if (!string.IsNullOrEmpty(fileContent))
+                    {
+                        <pre class="file-content"><code>@fileContent</code></pre>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseViewModal">Close</button>
+                    <button type="button" class="btn btn-primary" @onclick="() => DownloadFile(selectedFile)">
+                        <i class="bi bi-download"></i> Download
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* File Size Warning Modal *@
+@if (showSizeWarning && pendingViewFile != null)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-exclamation-triangle text-warning"></i> Large File Warning
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="CancelViewFile"></button>
+                </div>
+                <div class="modal-body">
+                    <p>The file <strong>@pendingViewFile.Name</strong> is <strong>@FormatFileSize(pendingViewFile.Size)</strong>.</p>
+                    <p>Viewing large files in the browser may cause performance issues. Are you sure you want to proceed?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CancelViewFile">Cancel</button>
+                    <button type="button" class="btn btn-warning" @onclick="ProceedViewFile">
+                        View Anyway
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string? RelativePath { get; set; }
+
+    private FileExplorerItem[]? items;
+    private string currentPath = string.Empty;
+    private bool isLoading = true;
+    private string? errorMessage;
+    
+    private bool showViewModal = false;
+    private bool showSizeWarning = false;
+    private FileExplorerItem? selectedFile;
+    private FileExplorerItem? pendingViewFile;
+    private bool isLoadingFile = false;
+    private string? fileContent;
+    private string? fileViewError;
+    
+    private const long MaxFileSizeWithoutWarning = 10 * 1024 * 1024; // 10 MB
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentPath = RelativePath ?? string.Empty;
+        await LoadDirectory();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var newPath = RelativePath ?? string.Empty;
+        if (newPath != currentPath)
+        {
+            currentPath = newPath;
+            await LoadDirectory();
+        }
+    }
+
+    private async Task LoadDirectory()
+    {
+        isLoading = true;
+        errorMessage = null;
+        
+        try
+        {
+            items = await FileExplorerService.ListDirectoryAsync(currentPath);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading directory: {ex.Message}";
+            items = Array.Empty<FileExplorerItem>();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void NavigateToPath(string path)
+    {
+        var url = string.IsNullOrEmpty(path) ? "/ui/file-explorer" : $"/ui/file-explorer/{path}";
+        NavigationManager.NavigateTo(url);
+    }
+
+    private async Task ViewFile(FileExplorerItem file)
+    {
+        if (file.Size > MaxFileSizeWithoutWarning)
+        {
+            pendingViewFile = file;
+            showSizeWarning = true;
+        }
+        else
+        {
+            await LoadAndShowFile(file);
+        }
+    }
+
+    private void CancelViewFile()
+    {
+        showSizeWarning = false;
+        pendingViewFile = null;
+    }
+
+    private async Task ProceedViewFile()
+    {
+        if (pendingViewFile != null)
+        {
+            showSizeWarning = false;
+            await LoadAndShowFile(pendingViewFile);
+            pendingViewFile = null;
+        }
+    }
+
+    private async Task LoadAndShowFile(FileExplorerItem file)
+    {
+        selectedFile = file;
+        showViewModal = true;
+        isLoadingFile = true;
+        fileContent = null;
+        fileViewError = null;
+        StateHasChanged();
+
+        try
+        {
+            var bytes = await FileExplorerService.ReadFileAsync(file.RelativePath);
+            
+            // Try to decode as text with better error handling
+            try
+            {
+                // Check if file contains null bytes (likely binary)
+                if (Array.IndexOf(bytes, (byte)0) >= 0)
+                {
+                    fileViewError = "This file appears to be binary and cannot be displayed as text.";
+                }
+                else
+                {
+                    // Use encoding with replacement fallback for invalid sequences
+                    var encoding = new System.Text.UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: false);
+                    fileContent = encoding.GetString(bytes);
+                }
+            }
+            catch (Exception ex)
+            {
+                fileViewError = $"Error decoding file: {ex.Message}";
+            }
+        }
+        catch (Exception ex)
+        {
+            fileViewError = $"Error loading file: {ex.Message}";
+        }
+        finally
+        {
+            isLoadingFile = false;
+            StateHasChanged();
+        }
+    }
+
+    private void CloseViewModal()
+    {
+        showViewModal = false;
+        selectedFile = null;
+        fileContent = null;
+        fileViewError = null;
+    }
+
+    private async Task DownloadFile(FileExplorerItem file)
+    {
+        try
+        {
+            var bytes = await FileExplorerService.ReadFileAsync(file.RelativePath);
+            var base64 = Convert.ToBase64String(bytes);
+            var mimeType = GetMimeType(file.Extension);
+            
+            await JSRuntime.InvokeVoidAsync("downloadFile", file.Name, mimeType, base64);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error downloading file: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    private bool IsViewableFile(FileExplorerItem item)
+    {
+        if (item.IsDirectory) return false;
+        
+        var viewableExtensions = new[] { ".txt", ".cs", ".js", ".ts", ".json", ".yml", ".yaml", ".md", ".xml", ".html", ".css", ".log", ".config", ".gitignore" };
+        return viewableExtensions.Contains(item.Extension?.ToLowerInvariant());
+    }
+
+    private string GetIconClass(FileExplorerItem item)
+    {
+        if (item.IsDirectory)
+        {
+            if (item.Name == ".git") return "bi bi-git text-danger";
+            return "bi bi-folder text-primary";
+        }
+
+        return item.Extension?.ToLowerInvariant() switch
+        {
+            ".cs" => "bi bi-file-code text-success",
+            ".js" => "bi bi-file-code text-warning",
+            ".ts" => "bi bi-file-code text-info",
+            ".json" => "bi bi-file-code text-secondary",
+            ".yml" or ".yaml" => "bi bi-file-code text-secondary",
+            ".md" => "bi bi-file-text text-primary",
+            ".gitignore" => "bi bi-file-text text-danger",
+            _ => "bi bi-file-text text-muted"
+        };
+    }
+
+    private string FormatFileSize(long bytes)
+    {
+        if (bytes < 1024) return $"{bytes} B";
+        if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
+        if (bytes < 1024 * 1024 * 1024) return $"{bytes / (1024.0 * 1024.0):F1} MB";
+        return $"{bytes / (1024.0 * 1024.0 * 1024.0):F1} GB";
+    }
+
+    private string GetMimeType(string? extension)
+    {
+        return extension?.ToLowerInvariant() switch
+        {
+            ".txt" => "text/plain",
+            ".cs" => "text/plain",
+            ".js" => "text/javascript",
+            ".ts" => "text/typescript",
+            ".json" => "application/json",
+            ".yml" or ".yaml" => "text/yaml",
+            ".md" => "text/markdown",
+            ".xml" => "application/xml",
+            ".html" => "text/html",
+            ".css" => "text/css",
+            _ => "application/octet-stream"
+        };
+    }
+}
