@@ -58,10 +58,19 @@ public class ContextGraphService : IContextGraphService, IDisposable
             _connection.Open();
 
             // Install and load DuckPGQ extension
-            await ExecuteNonQueryAsync("INSTALL duckpgq FROM community");
-            await ExecuteNonQueryAsync("LOAD duckpgq");
+            // Note: DuckPGQ must be available in the DuckDB community repository
+            // If this fails, the graph features will be unavailable but the app will still run
+            try
+            {
+                await ExecuteNonQueryAsync("INSTALL duckpgq FROM community");
+                await ExecuteNonQueryAsync("LOAD duckpgq");
+                _logger.LogInformation("DuckDB context graph with DuckPGQ initialized successfully");
+            }
+            catch (Exception pgqEx)
+            {
+                _logger.LogWarning(pgqEx, "DuckPGQ extension could not be loaded - graph features will be limited");
+            }
 
-            _logger.LogInformation("DuckDB context graph initialized successfully");
             _initialized = true;
         }
         catch (Exception ex)
@@ -142,6 +151,7 @@ public class ContextGraphService : IContextGraphService, IDisposable
 
         using var cmd = _connection.CreateCommand();
         cmd.CommandText = sql;
+        // ExecuteNonQuery is synchronous in DuckDB.NET
         await Task.Run(() => cmd.ExecuteNonQuery());
     }
 

@@ -15,6 +15,7 @@ public interface IGraphNodeService
     Task<Edge> CreateEdgeAsync(Edge edge);
     Task DeleteEdgeAsync(int id);
     Task<List<EdgeType>> GetEdgeTypesAsync();
+    Task UpdateNodeContentAsync(int nodeId, string content, string contentType = "text/markdown");
 }
 
 public class GraphNodeService : IGraphNodeService
@@ -101,5 +102,36 @@ public class GraphNodeService : IGraphNodeService
     public async Task<List<EdgeType>> GetEdgeTypesAsync()
     {
         return await _context.EdgeTypes.ToListAsync();
+    }
+
+    public async Task UpdateNodeContentAsync(int nodeId, string content, string contentType = "text/markdown")
+    {
+        var node = await _context.Nodes
+            .Include(n => n.Document)
+            .FirstOrDefaultAsync(n => n.Id == nodeId);
+
+        if (node == null)
+            throw new InvalidOperationException($"Node with ID {nodeId} not found");
+
+        if (node.ContentStorageType != ContentStorageType.Embedded)
+            throw new InvalidOperationException("Cannot update content for non-embedded nodes");
+
+        if (node.Document == null)
+        {
+            node.Document = new Document
+            {
+                NodeId = nodeId,
+                Content = content,
+                ContentType = contentType
+            };
+            _context.Documents.Add(node.Document);
+        }
+        else
+        {
+            node.Document.Content = content;
+            node.Document.ContentType = contentType;
+        }
+
+        await _context.SaveChangesAsync();
     }
 }

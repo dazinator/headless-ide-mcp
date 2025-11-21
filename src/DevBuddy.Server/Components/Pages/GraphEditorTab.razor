@@ -351,9 +351,12 @@
         showEditContentModal = false;
     }
 
-    private void SaveContent()
+    private async Task SaveContent()
     {
-        // Implementation for saving content would go here
+        if (selectedNode == null || string.IsNullOrEmpty(contentText)) return;
+
+        await GraphNodeService.UpdateNodeContentAsync(selectedNode.Id, contentText);
+        await LoadData();
         HideEditContentModal();
     }
 }
