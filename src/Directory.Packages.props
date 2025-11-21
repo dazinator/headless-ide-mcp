@@ -19,6 +19,11 @@
     <PackageVersion Include="Stint" Version="0.1.0-alpha.99" />
     <!--MCP Server-->
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="0.4.0-preview.3" />
+    <!--DuckDB-->
+    <PackageVersion Include="DuckDB.NET.Data" Version="1.1.3" />
+    <PackageVersion Include="DuckDB.NET.Bindings.Full" Version="1.1.3" />
+    <!--Blazor Graph Component-->
+    <PackageVersion Include="VisNetwork.Blazor" Version="3.0.0" />
     <!--Tests-->
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.11" />
