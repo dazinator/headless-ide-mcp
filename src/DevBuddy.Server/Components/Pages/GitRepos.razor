@@ -52,7 +52,15 @@
                                     <i class="bi bi-link-45deg"></i> @repo.RemoteUrl
                                 </small><br />
                                 <small class="text-muted">
-                                    <i class="bi bi-folder"></i> @repo.LocalPath
+                                    <i class="bi bi-folder"></i> 
+                                    @if (repo.CloneStatus == CloneStatus.Cloned)
+                                    {
+                                        <a href="/ui/file-explorer/@repo.LocalPath" class="text-decoration-none">@repo.LocalPath</a>
+                                    }
+                                    else
+                                    {
+                                        @repo.LocalPath
+                                    }
                                 </small>
                             </p>
                             
