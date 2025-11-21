@@ -394,7 +394,16 @@ public class GitRepositoryService : IGitRepositoryService
         
         // Extract repository name from the path (last directory name)
         var dirName = Path.GetFileName(fullPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-        var repoName = string.IsNullOrEmpty(dirName) ? "imported-repo" : dirName;
+        var baseName = string.IsNullOrEmpty(dirName) ? "imported-repo" : dirName;
+        
+        // Ensure unique name (handle case where multiple repos have same directory name)
+        var repoName = baseName;
+        var counter = 1;
+        while (await _context.GitRepositories.AnyAsync(r => r.Name == repoName))
+        {
+            repoName = $"{baseName}-{counter}";
+            counter++;
+        }
         
         // Try to get remote URL
         string? remoteUrl = null;
