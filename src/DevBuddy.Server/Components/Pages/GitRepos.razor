@@ -43,14 +43,24 @@
         <div class="row">
             @foreach (var repo in repositories)
             {
+                var remoteType = GetRemoteType(repo.RemoteUrl);
                 <div class="col-md-6 col-lg-4 mb-3">
                     <div class="card repo-card h-100">
                         <div class="card-body">
-                            <h5 class="card-title">@repo.Name</h5>
+                            <div class="d-flex justify-content-between align-items-start">
+                                <h5 class="card-title">@repo.Name</h5>
+                                <span class="badge @GetRemoteBadgeClass(remoteType)">
+                                    <i class="@GetRemoteIcon(remoteType)"></i> @GetRemoteLabel(remoteType)
+                                </span>
+                            </div>
                             <p class="card-text">
-                                <small class="text-muted">
-                                    <i class="bi bi-link-45deg"></i> @repo.RemoteUrl
-                                </small><br />
+                                @if (!string.IsNullOrWhiteSpace(repo.RemoteUrl))
+                                {
+                                    <small class="text-muted">
+                                        <i class="bi bi-link-45deg"></i> @repo.RemoteUrl
+                                    </small>
+                                    <br />
+                                }
                                 <small class="text-muted">
                                     <i class="bi bi-folder"></i> 
                                     @if (repo.CloneStatus == CloneStatus.Cloned)
@@ -137,24 +147,41 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="localRepoToggle" 
+                                   checked="@isLocalRepo" @onchange="ToggleRepoType">
+                            <label class="form-check-label" for="localRepoToggle">
+                                <i class="bi bi-laptop"></i> Create as local repository (no remote)
+                            </label>
+                        </div>
+                        <small class="form-text text-muted">Local repositories are initialized without a remote URL</small>
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">Name</label>
                         <input type="text" class="form-control" @bind="newRepo.Name" placeholder="my-project" />
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Remote URL</label>
-                        <input type="text" class="form-control" @bind="newRepo.RemoteUrl" 
-                               placeholder="https://github.com/user/repo.git" />
-                    </div>
+                    @if (!isLocalRepo)
+                    {
+                        <div class="mb-3">
+                            <label class="form-label">Remote URL</label>
+                            <input type="text" class="form-control" @bind="newRepo.RemoteUrl" 
+                                   placeholder="https://github.com/user/repo.git" />
+                        </div>
+                    }
                     <div class="mb-3">
                         <label class="form-label">Local Path</label>
                         <input type="text" class="form-control" @bind="newRepo.LocalPath" 
                                placeholder="my-project" />
-                        <small class="form-text text-muted">Path within /git-repos where the repo will be cloned</small>
+                        <small class="form-text text-muted">
+                            Path within /git-repos where the repo will be @(isLocalRepo ? "initialized" : "cloned")
+                        </small>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" @onclick="HideAddModal">Cancel</button>
-                    <button type="button" class="btn btn-primary" @onclick="AddRepository">Add Repository</button>
+                    <button type="button" class="btn btn-primary" @onclick="AddRepository">
+                        @(isLocalRepo ? "Initialize Repository" : "Add Repository")
+                    </button>
                 </div>
             </div>
         </div>
@@ -272,6 +299,7 @@
     private bool isCreateMode = false;
     private string newBranchName = "";
     private string selectedRemoteBranch = "";
+    private bool isLocalRepo = false;
     
     private GitRepositoryConfiguration newRepo = new()
     {
@@ -295,6 +323,7 @@
     private void ShowAddModal()
     {
         newRepo = new GitRepositoryConfiguration { Name = "", RemoteUrl = "", LocalPath = "" };
+        isLocalRepo = false;
         showAddModal = true;
         StateHasChanged();
     }
@@ -307,15 +336,91 @@
     private async Task AddRepository()
     {
         if (string.IsNullOrWhiteSpace(newRepo.Name) || 
-            string.IsNullOrWhiteSpace(newRepo.RemoteUrl) || 
             string.IsNullOrWhiteSpace(newRepo.LocalPath))
         {
             return;
         }
 
+        // Validate that remote URL is provided if not creating a local repo
+        if (!isLocalRepo && string.IsNullOrWhiteSpace(newRepo.RemoteUrl))
+        {
+            return;
+        }
+
+        // Clear remote URL if creating a local repo
+        if (isLocalRepo)
+        {
+            newRepo.RemoteUrl = null;
+        }
+
         await GitRepoService.CreateAsync(newRepo);
         await LoadRepositories();
         HideAddModal();
+    }
+
+    private void ToggleRepoType()
+    {
+        isLocalRepo = !isLocalRepo;
+    }
+
+    private string GetRemoteType(string? remoteUrl)
+    {
+        if (string.IsNullOrWhiteSpace(remoteUrl))
+            return "local";
+        
+        if (remoteUrl.Contains("github.com", StringComparison.OrdinalIgnoreCase))
+            return "github";
+        
+        if (remoteUrl.Contains("dev.azure.com", StringComparison.OrdinalIgnoreCase) || 
+            remoteUrl.Contains("visualstudio.com", StringComparison.OrdinalIgnoreCase))
+            return "azuredevops";
+        
+        if (remoteUrl.Contains("gitlab.com", StringComparison.OrdinalIgnoreCase))
+            return "gitlab";
+        
+        if (remoteUrl.Contains("bitbucket.org", StringComparison.OrdinalIgnoreCase))
+            return "bitbucket";
+        
+        return "git";
+    }
+
+    private string GetRemoteIcon(string remoteType)
+    {
+        return remoteType switch
+        {
+            "local" => "bi-laptop",
+            "github" => "bi-github",
+            "azuredevops" => "bi-cloud",
+            "gitlab" => "bi-git",
+            "bitbucket" => "bi-git",
+            _ => "bi-git"
+        };
+    }
+
+    private string GetRemoteLabel(string remoteType)
+    {
+        return remoteType switch
+        {
+            "local" => "Local",
+            "github" => "GitHub",
+            "azuredevops" => "Azure DevOps",
+            "gitlab" => "GitLab",
+            "bitbucket" => "Bitbucket",
+            _ => "Remote"
+        };
+    }
+
+    private string GetRemoteBadgeClass(string remoteType)
+    {
+        return remoteType switch
+        {
+            "local" => "bg-secondary",
+            "github" => "bg-dark",
+            "azuredevops" => "bg-primary",
+            "gitlab" => "bg-warning text-dark",
+            "bitbucket" => "bg-info",
+            _ => "bg-secondary"
+        };
     }
 
     private async Task DeleteRepository(int id)

@@ -6,7 +6,7 @@ public class GitRepositoryConfiguration
     
     public required string Name { get; set; }
     
-    public required string RemoteUrl { get; set; }
+    public string? RemoteUrl { get; set; }
     
     public required string LocalPath { get; set; }
     

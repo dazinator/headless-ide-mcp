@@ -19,7 +19,7 @@ public class DevBuddyDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
-            entity.Property(e => e.RemoteUrl).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.RemoteUrl).HasMaxLength(500);
             entity.Property(e => e.LocalPath).IsRequired().HasMaxLength(500);
             entity.Property(e => e.ErrorMessage).HasMaxLength(1000);
             entity.Property(e => e.CurrentBranch).HasMaxLength(200);

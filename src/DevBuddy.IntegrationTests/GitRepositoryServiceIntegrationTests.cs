@@ -278,6 +278,111 @@ public class GitRepositoryServiceIntegrationTests : IDisposable
         remoteBranches.ShouldContain("origin/develop");
     }
 
+    [Fact]
+    public async Task CreateAsync_WithLocalRepo_InitializesGitRepository()
+    {
+        // Arrange
+        var localRepoConfig = new GitRepositoryConfiguration
+        {
+            Name = "local-test-repo",
+            RemoteUrl = null,
+            LocalPath = "local-repo"
+        };
+
+        // Act
+        var createdRepo = await _sut.CreateAsync(localRepoConfig);
+
+        // Assert
+        createdRepo.ShouldNotBeNull();
+        createdRepo.Id.ShouldBeGreaterThan(0);
+        createdRepo.CloneStatus.ShouldBe(CloneStatus.Cloned);
+        createdRepo.ErrorMessage.ShouldBeNull();
+        
+        // Verify the git repository was initialized
+        var repoPath = Path.Combine(_testDirectory, "local-repo");
+        Directory.Exists(repoPath).ShouldBeTrue();
+        Directory.Exists(Path.Combine(repoPath, ".git")).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task CreateAsync_WithRemoteUrl_DoesNotCloneImmediately()
+    {
+        // Arrange
+        var remoteRepoConfig = new GitRepositoryConfiguration
+        {
+            Name = "remote-test-repo",
+            RemoteUrl = "https://github.com/test/repo.git",
+            LocalPath = "remote-repo"
+        };
+
+        // Act
+        var createdRepo = await _sut.CreateAsync(remoteRepoConfig);
+
+        // Assert
+        createdRepo.ShouldNotBeNull();
+        createdRepo.Id.ShouldBeGreaterThan(0);
+        createdRepo.CloneStatus.ShouldBe(CloneStatus.NotCloned);
+        
+        // Verify the repository directory was NOT created yet (AutoCloneBackgroundService handles this)
+        var repoPath = Path.Combine(_testDirectory, "remote-repo");
+        Directory.Exists(repoPath).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task CheckRepositoryStatusAsync_WithLocalRepo_ReturnsCorrectStatus()
+    {
+        // Arrange
+        var localRepoConfig = new GitRepositoryConfiguration
+        {
+            Name = "local-status-test",
+            RemoteUrl = null,
+            LocalPath = "local-status-repo"
+        };
+        var createdRepo = await _sut.CreateAsync(localRepoConfig);
+
+        // Wait a moment for initialization to complete
+        await Task.Delay(100);
+
+        // Act
+        var statusResult = await _sut.CheckRepositoryStatusAsync(createdRepo.Id);
+
+        // Assert
+        statusResult.ShouldBeTrue();
+        var updatedRepo = await _sut.GetByIdAsync(createdRepo.Id);
+        updatedRepo.ShouldNotBeNull();
+        updatedRepo.CloneStatus.ShouldBe(CloneStatus.Cloned);
+        updatedRepo.ErrorMessage.ShouldBeNull();
+        updatedRepo.CommitsAhead.ShouldBe(0);
+        updatedRepo.CommitsBehind.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task CheckRepositoryStatusAsync_WithLocalRepoAndCommits_DetectsUncommittedChanges()
+    {
+        // Arrange
+        var localRepoConfig = new GitRepositoryConfiguration
+        {
+            Name = "local-changes-test",
+            RemoteUrl = null,
+            LocalPath = "local-changes-repo"
+        };
+        var createdRepo = await _sut.CreateAsync(localRepoConfig);
+        await Task.Delay(100);
+
+        // Create a file in the repository
+        var repoPath = Path.Combine(_testDirectory, "local-changes-repo");
+        File.WriteAllText(Path.Combine(repoPath, "test.txt"), "Test content");
+
+        // Act
+        var statusResult = await _sut.CheckRepositoryStatusAsync(createdRepo.Id);
+
+        // Assert
+        statusResult.ShouldBeTrue();
+        var updatedRepo = await _sut.GetByIdAsync(createdRepo.Id);
+        updatedRepo.ShouldNotBeNull();
+        updatedRepo.HasUncommittedChanges.ShouldBeTrue();
+    }
+
     public void Dispose()
     {
         // Clean up test directory

@@ -47,9 +47,9 @@ public class AutoCloneBackgroundService : BackgroundService
         var dbContext = scope.ServiceProvider.GetRequiredService<DevBuddyDbContext>();
         var gitReposBasePath = _configuration["GitRepositoriesPath"] ?? "/git-repos";
 
-        // Get repositories that need to be cloned
+        // Get repositories that need to be cloned (only those with remote URLs)
         var reposToClone = await dbContext.GitRepositories
-            .Where(r => r.CloneStatus == CloneStatus.NotCloned)
+            .Where(r => r.CloneStatus == CloneStatus.NotCloned && !string.IsNullOrEmpty(r.RemoteUrl))
             .ToListAsync(stoppingToken);
 
         foreach (var repo in reposToClone)
@@ -58,6 +58,13 @@ public class AutoCloneBackgroundService : BackgroundService
 
             try
             {
+                // Safety check - should never happen due to LINQ filter above
+                if (string.IsNullOrEmpty(repo.RemoteUrl))
+                {
+                    _logger.LogWarning("Skipping repository {RepoName} - no remote URL configured", repo.Name);
+                    continue;
+                }
+
                 _logger.LogInformation("Cloning repository {RepoName} from {RemoteUrl}", repo.Name, repo.RemoteUrl);
                 
                 repo.CloneStatus = CloneStatus.Cloning;
@@ -92,6 +99,11 @@ public class AutoCloneBackgroundService : BackgroundService
 
     private async Task CloneRepositoryAsync(string remoteUrl, string localPath, CancellationToken token)
     {
+        if (string.IsNullOrWhiteSpace(remoteUrl))
+        {
+            throw new InvalidOperationException("Remote URL is required for cloning");
+        }
+
         var startInfo = new ProcessStartInfo
         {
             FileName = "git",

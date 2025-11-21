@@ -53,6 +53,12 @@ public class GitRepositoryService : IGitRepositoryService
         _context.GitRepositories.Add(config);
         await _context.SaveChangesAsync();
         
+        // If this is a local repo (no remote URL), initialize it immediately
+        if (string.IsNullOrWhiteSpace(config.RemoteUrl))
+        {
+            await InitializeLocalRepositoryAsync(config);
+        }
+        
         return config;
     }
 
@@ -97,45 +103,28 @@ public class GitRepositoryService : IGitRepositoryService
             }
             else
             {
-                // Check if remote URL matches
-                var remoteUrl = await ExecuteGitCommandAsync(fullPath, "config --get remote.origin.url");
-                if (!string.IsNullOrEmpty(remoteUrl) && remoteUrl.Trim() != config.RemoteUrl.Trim())
+                // Check if remote URL matches (only for repos with remotes)
+                if (!string.IsNullOrWhiteSpace(config.RemoteUrl))
                 {
-                    config.CloneStatus = CloneStatus.Conflict;
-                    config.ErrorMessage = $"Repository exists but has different remote URL: {remoteUrl}";
+                    var remoteUrl = await ExecuteGitCommandAsync(fullPath, "config --get remote.origin.url");
+                    if (!string.IsNullOrEmpty(remoteUrl) && remoteUrl.Trim() != config.RemoteUrl.Trim())
+                    {
+                        config.CloneStatus = CloneStatus.Conflict;
+                        config.ErrorMessage = $"Repository exists but has different remote URL: {remoteUrl}";
+                    }
+                    else
+                    {
+                        config.CloneStatus = CloneStatus.Cloned;
+                        config.ErrorMessage = null;
+                        await UpdateRepositoryStatusDetails(config, fullPath);
+                    }
                 }
                 else
                 {
+                    // Local repo without remote
                     config.CloneStatus = CloneStatus.Cloned;
                     config.ErrorMessage = null;
-                    
-                    // Get current branch
-                    config.CurrentBranch = await ExecuteGitCommandAsync(fullPath, "rev-parse --abbrev-ref HEAD");
-                    
-                    // Check for uncommitted changes
-                    var statusOutput = await ExecuteGitCommandAsync(fullPath, "status --porcelain");
-                    config.HasUncommittedChanges = !string.IsNullOrWhiteSpace(statusOutput);
-                    
-                    // Get commits ahead/behind
-                    try
-                    {
-                        var aheadBehind = await ExecuteGitCommandAsync(fullPath, "rev-list --left-right --count HEAD...@{u}");
-                        if (!string.IsNullOrWhiteSpace(aheadBehind))
-                        {
-                            var parts = aheadBehind.Trim().Split('\t');
-                            if (parts.Length == 2)
-                            {
-                                config.CommitsAhead = int.TryParse(parts[0], out var ahead) ? ahead : 0;
-                                config.CommitsBehind = int.TryParse(parts[1], out var behind) ? behind : 0;
-                            }
-                        }
-                    }
-                    catch
-                    {
-                        // Upstream might not be set
-                        config.CommitsAhead = 0;
-                        config.CommitsBehind = 0;
-                    }
+                    await UpdateRepositoryStatusDetails(config, fullPath);
                 }
             }
 
@@ -150,6 +139,89 @@ public class GitRepositoryService : IGitRepositoryService
             config.ErrorMessage = ex.Message;
             await UpdateAsync(config);
             return false;
+        }
+    }
+
+    private async Task UpdateRepositoryStatusDetails(GitRepositoryConfiguration config, string fullPath)
+    {
+        // Get current branch (handle fresh repos with no commits)
+        try
+        {
+            config.CurrentBranch = await ExecuteGitCommandAsync(fullPath, "rev-parse --abbrev-ref HEAD");
+        }
+        catch
+        {
+            // Fresh repository with no commits - try to get default branch name
+            try
+            {
+                config.CurrentBranch = await ExecuteGitCommandAsync(fullPath, "symbolic-ref --short HEAD");
+            }
+            catch
+            {
+                config.CurrentBranch = null;
+            }
+        }
+        
+        // Check for uncommitted changes
+        var statusOutput = await ExecuteGitCommandAsync(fullPath, "status --porcelain");
+        config.HasUncommittedChanges = !string.IsNullOrWhiteSpace(statusOutput);
+        
+        // Get commits ahead/behind (only if remote is configured)
+        try
+        {
+            var aheadBehind = await ExecuteGitCommandAsync(fullPath, "rev-list --left-right --count HEAD...@{u}");
+            if (!string.IsNullOrWhiteSpace(aheadBehind))
+            {
+                var parts = aheadBehind.Trim().Split('\t');
+                if (parts.Length == 2)
+                {
+                    config.CommitsAhead = int.TryParse(parts[0], out var ahead) ? ahead : 0;
+                    config.CommitsBehind = int.TryParse(parts[1], out var behind) ? behind : 0;
+                }
+            }
+        }
+        catch
+        {
+            // Upstream might not be set (expected for local repos)
+            config.CommitsAhead = 0;
+            config.CommitsBehind = 0;
+        }
+    }
+
+    private async Task InitializeLocalRepositoryAsync(GitRepositoryConfiguration config)
+    {
+        try
+        {
+            _logger.LogInformation("Initializing local repository {RepoName}", config.Name);
+            
+            var fullPath = Path.Combine(_gitReposBasePath, config.LocalPath);
+            var parentDir = Path.GetDirectoryName(fullPath);
+            
+            if (!string.IsNullOrEmpty(parentDir))
+            {
+                Directory.CreateDirectory(parentDir);
+            }
+
+            // Create the directory if it doesn't exist
+            Directory.CreateDirectory(fullPath);
+
+            // Initialize git repository
+            await ExecuteGitCommandAsync(fullPath, "init");
+            
+            config.CloneStatus = CloneStatus.Cloned;
+            config.ErrorMessage = null;
+            config.LastChecked = DateTime.UtcNow;
+            
+            await UpdateAsync(config);
+            
+            _logger.LogInformation("Successfully initialized local repository {RepoName}", config.Name);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to initialize local repository {RepoName}", config.Name);
+            config.CloneStatus = CloneStatus.Failed;
+            config.ErrorMessage = ex.Message;
+            await UpdateAsync(config);
         }
     }
 
