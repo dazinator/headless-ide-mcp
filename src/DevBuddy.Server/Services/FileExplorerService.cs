@@ -35,15 +35,17 @@ public class FileExplorerService : IFileExplorerService
             {
                 try
                 {
+                    var relativePath = GetRelativePath(dir.FullName);
                     items.Add(new FileExplorerItem
                     {
                         Name = dir.Name,
                         Path = dir.FullName,
-                        RelativePath = GetRelativePath(dir.FullName),
+                        RelativePath = relativePath,
                         IsDirectory = true,
                         Size = 0,
                         LastModified = dir.LastWriteTime,
-                        Extension = null
+                        Extension = null,
+                        IsGitRepository = IsGitRepository(relativePath)
                     });
                 }
                 catch (Exception ex)
@@ -65,7 +67,8 @@ public class FileExplorerService : IFileExplorerService
                         IsDirectory = false,
                         Size = file.Length,
                         LastModified = file.LastWriteTime,
-                        Extension = file.Extension
+                        Extension = file.Extension,
+                        IsGitRepository = false
                     });
                 }
                 catch (Exception ex)
@@ -134,6 +137,26 @@ public class FileExplorerService : IFileExplorerService
         }
 
         return fullPath;
+    }
+
+    public bool IsGitRepository(string path)
+    {
+        try
+        {
+            var fullPath = GetSafePath(path);
+            if (!Directory.Exists(fullPath))
+            {
+                return false;
+            }
+            
+            var gitDir = Path.Combine(fullPath, ".git");
+            return Directory.Exists(gitDir);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error checking if path is git repository: {Path}", path);
+            return false;
+        }
     }
 
     private string GetRelativePath(string fullPath)

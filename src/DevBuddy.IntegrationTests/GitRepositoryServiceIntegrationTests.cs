@@ -383,6 +383,109 @@ public class GitRepositoryServiceIntegrationTests : IDisposable
         updatedRepo.HasUncommittedChanges.ShouldBeTrue();
     }
 
+    [Fact]
+    public async Task ImportExistingRepositoryAsync_WithValidGitRepo_ImportsSuccessfully()
+    {
+        // Arrange
+        var existingRepoPath = Path.Combine(_testDirectory, "existing-repo");
+        Directory.CreateDirectory(existingRepoPath);
+        
+        // Initialize a git repository
+        ExecuteGit(existingRepoPath, "init");
+        ExecuteGit(existingRepoPath, "config user.email \"test@test.com\"");
+        ExecuteGit(existingRepoPath, "config user.name \"Test User\"");
+        
+        // Create a commit
+        File.WriteAllText(Path.Combine(existingRepoPath, "README.md"), "# Existing Repo");
+        ExecuteGit(existingRepoPath, "add .");
+        ExecuteGit(existingRepoPath, "commit -m \"Initial commit\"");
+        
+        // Add a remote URL
+        ExecuteGit(existingRepoPath, "remote add origin https://github.com/test/existing-repo.git");
+
+        // Act
+        var importedRepo = await _sut.ImportExistingRepositoryAsync("existing-repo");
+
+        // Assert
+        importedRepo.ShouldNotBeNull();
+        importedRepo.Id.ShouldBeGreaterThan(0);
+        importedRepo.Name.ShouldBe("existing-repo");
+        importedRepo.LocalPath.ShouldBe("existing-repo");
+        importedRepo.RemoteUrl.ShouldBe("https://github.com/test/existing-repo.git");
+        importedRepo.CloneStatus.ShouldBe(CloneStatus.Cloned);
+        importedRepo.ErrorMessage.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task ImportExistingRepositoryAsync_WithLocalRepoNoRemote_ImportsWithoutRemoteUrl()
+    {
+        // Arrange
+        var existingRepoPath = Path.Combine(_testDirectory, "local-existing-repo");
+        Directory.CreateDirectory(existingRepoPath);
+        
+        // Initialize a local git repository without remote
+        ExecuteGit(existingRepoPath, "init");
+        ExecuteGit(existingRepoPath, "config user.email \"test@test.com\"");
+        ExecuteGit(existingRepoPath, "config user.name \"Test User\"");
+        
+        // Create a commit
+        File.WriteAllText(Path.Combine(existingRepoPath, "file.txt"), "Content");
+        ExecuteGit(existingRepoPath, "add .");
+        ExecuteGit(existingRepoPath, "commit -m \"First commit\"");
+
+        // Act
+        var importedRepo = await _sut.ImportExistingRepositoryAsync("local-existing-repo");
+
+        // Assert
+        importedRepo.ShouldNotBeNull();
+        importedRepo.Name.ShouldBe("local-existing-repo");
+        importedRepo.LocalPath.ShouldBe("local-existing-repo");
+        importedRepo.RemoteUrl.ShouldBeNull();
+        importedRepo.CloneStatus.ShouldBe(CloneStatus.Cloned);
+    }
+
+    [Fact]
+    public async Task ImportExistingRepositoryAsync_WithNonExistentDirectory_ThrowsException()
+    {
+        // Act & Assert
+        var exception = await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await _sut.ImportExistingRepositoryAsync("non-existent-repo"));
+        
+        exception.Message.ShouldContain("Directory does not exist");
+    }
+
+    [Fact]
+    public async Task ImportExistingRepositoryAsync_WithNonGitDirectory_ThrowsException()
+    {
+        // Arrange
+        var nonGitDir = Path.Combine(_testDirectory, "not-a-git-repo");
+        Directory.CreateDirectory(nonGitDir);
+
+        // Act & Assert
+        var exception = await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await _sut.ImportExistingRepositoryAsync("not-a-git-repo"));
+        
+        exception.Message.ShouldContain("not a git repository");
+    }
+
+    [Fact]
+    public async Task ImportExistingRepositoryAsync_WithAlreadyImportedRepo_ThrowsException()
+    {
+        // Arrange
+        var existingRepoPath = Path.Combine(_testDirectory, "already-imported");
+        Directory.CreateDirectory(existingRepoPath);
+        ExecuteGit(existingRepoPath, "init");
+        
+        // Import it first time
+        await _sut.ImportExistingRepositoryAsync("already-imported");
+
+        // Act & Assert
+        var exception = await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await _sut.ImportExistingRepositoryAsync("already-imported"));
+        
+        exception.Message.ShouldContain("already imported");
+    }
+
     public void Dispose()
     {
         // Clean up test directory

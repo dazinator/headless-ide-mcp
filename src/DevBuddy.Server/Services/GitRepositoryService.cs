@@ -16,6 +16,7 @@ public interface IGitRepositoryService
     Task<List<string>> GetBranchesAsync(int id);
     Task<(List<string> LocalBranches, List<string> RemoteBranches)> GetLocalAndRemoteBranchesAsync(int id);
     Task<bool> CheckoutBranchAsync(int id, string branchName, bool createNew = false, string? trackRemoteBranch = null);
+    Task<GitRepositoryConfiguration> ImportExistingRepositoryAsync(string relativePath);
 }
 
 public class GitRepositoryService : IGitRepositoryService
@@ -364,5 +365,73 @@ public class GitRepositoryService : IGitRepositoryService
         }
 
         return output;
+    }
+
+    public async Task<GitRepositoryConfiguration> ImportExistingRepositoryAsync(string relativePath)
+    {
+        var fullPath = Path.Combine(_gitReposBasePath, relativePath);
+        
+        // Validate that the path exists and is a git repository
+        if (!Directory.Exists(fullPath))
+        {
+            throw new InvalidOperationException($"Directory does not exist: {relativePath}");
+        }
+        
+        var gitDir = Path.Combine(fullPath, ".git");
+        if (!Directory.Exists(gitDir))
+        {
+            throw new InvalidOperationException($"Directory is not a git repository: {relativePath}");
+        }
+        
+        // Check if this path is already imported
+        var existingRepo = await _context.GitRepositories
+            .FirstOrDefaultAsync(r => r.LocalPath == relativePath);
+        
+        if (existingRepo != null)
+        {
+            throw new InvalidOperationException($"Repository is already imported: {relativePath}");
+        }
+        
+        // Extract repository name from the path (last directory name)
+        var dirName = Path.GetFileName(fullPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        var repoName = string.IsNullOrEmpty(dirName) ? "imported-repo" : dirName;
+        
+        // Try to get remote URL
+        string? remoteUrl = null;
+        try
+        {
+            remoteUrl = await ExecuteGitCommandAsync(fullPath, "config --get remote.origin.url");
+            remoteUrl = remoteUrl?.Trim();
+            if (string.IsNullOrWhiteSpace(remoteUrl))
+            {
+                remoteUrl = null;
+            }
+        }
+        catch
+        {
+            // No remote configured, which is fine
+            remoteUrl = null;
+        }
+        
+        // Create the configuration
+        var config = new GitRepositoryConfiguration
+        {
+            Name = repoName,
+            RemoteUrl = remoteUrl,
+            LocalPath = relativePath,
+            CloneStatus = CloneStatus.Cloned,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+            LastChecked = DateTime.UtcNow
+        };
+        
+        _context.GitRepositories.Add(config);
+        await _context.SaveChangesAsync();
+        
+        // Update status to populate current branch and other details
+        await CheckRepositoryStatusAsync(config.Id);
+        
+        // Reload to get updated values
+        return await GetByIdAsync(config.Id) ?? config;
     }
 }

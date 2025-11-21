@@ -21,6 +21,11 @@ public interface IFileExplorerService
     /// Gets the base path for file exploration
     /// </summary>
     string GetBasePath();
+    
+    /// <summary>
+    /// Checks if a directory at the specified path is a git repository
+    /// </summary>
+    bool IsGitRepository(string path);
 }
 
 public class FileExplorerItem
@@ -32,4 +37,5 @@ public class FileExplorerItem
     public long Size { get; set; }
     public DateTime LastModified { get; set; }
     public string? Extension { get; set; }
+    public bool IsGitRepository { get; set; }
 }

@@ -2,8 +2,10 @@
 @page "/ui/file-explorer/{*relativePath}"
 @rendermode InteractiveServer
 @using DevBuddy.Server.Services
+@using DevBuddy.Server.Data.Models
 @using Microsoft.JSInterop
 @inject IFileExplorerService FileExplorerService
+@inject IGitRepositoryService GitRepoService
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
 
@@ -70,11 +72,25 @@
                         @if (item.IsDirectory)
                         {
                             <div class="list-group-item list-group-item-action">
-                                <div class="d-flex align-items-center">
-                                    <i class="@GetIconClass(item) me-2"></i>
-                                    <a href="#" @onclick="() => NavigateToPath(item.RelativePath)" @onclick:preventDefault class="text-decoration-none">
-                                        @item.Name
-                                    </a>
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <i class="@GetIconClass(item) me-2"></i>
+                                        <a href="#" @onclick="() => NavigateToPath(item.RelativePath)" @onclick:preventDefault class="text-decoration-none">
+                                            @item.Name
+                                        </a>
+                                        @if (item.IsGitRepository)
+                                        {
+                                            <span class="badge bg-secondary ms-2">
+                                                <i class="bi bi-git"></i> Git Repo
+                                            </span>
+                                        }
+                                    </div>
+                                    @if (item.IsGitRepository && !IsRepoImported(item.RelativePath))
+                                    {
+                                        <button class="btn btn-sm btn-success" @onclick="() => ImportRepository(item.RelativePath)" @onclick:stopPropagation>
+                                            <i class="bi bi-plus-circle"></i> Import Git Repo
+                                        </button>
+                                    }
                                 </div>
                             </div>
                         }
@@ -189,6 +205,7 @@
     private string currentPath = string.Empty;
     private bool isLoading = true;
     private string? errorMessage;
+    private List<GitRepositoryConfiguration>? importedRepos;
     
     private bool showViewModal = false;
     private bool showSizeWarning = false;
@@ -204,6 +221,7 @@
     {
         currentPath = RelativePath ?? string.Empty;
         await LoadDirectory();
+        await LoadImportedRepos();
     }
 
     protected override async Task OnParametersSetAsync()
@@ -213,6 +231,20 @@
         {
             currentPath = newPath;
             await LoadDirectory();
+        }
+    }
+
+    private async Task LoadImportedRepos()
+    {
+        try
+        {
+            importedRepos = await GitRepoService.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            // Log error but don't fail the page load
+            errorMessage = $"Error loading imported repositories: {ex.Message}";
+            importedRepos = new List<GitRepositoryConfiguration>();
         }
     }
 
@@ -393,5 +425,36 @@
             ".css" => "text/css",
             _ => "application/octet-stream"
         };
+    }
+
+    private bool IsRepoImported(string relativePath)
+    {
+        if (importedRepos == null)
+            return false;
+
+        // Normalize paths for comparison
+        var normalizedPath = relativePath.Replace('\\', '/').TrimEnd('/');
+        return importedRepos.Any(r => 
+            r.LocalPath.Replace('\\', '/').TrimEnd('/').Equals(normalizedPath, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private async Task ImportRepository(string relativePath)
+    {
+        try
+        {
+            errorMessage = null;
+            var imported = await GitRepoService.ImportExistingRepositoryAsync(relativePath);
+            
+            // Reload the list of imported repos
+            await LoadImportedRepos();
+            
+            // Force UI refresh
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error importing repository: {ex.Message}";
+            StateHasChanged();
+        }
     }
 }
