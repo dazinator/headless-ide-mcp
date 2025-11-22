@@ -228,6 +228,7 @@
 
         await LoadDomains();
         HideDomainModal();
+        StateHasChanged();
     }
 
     private async Task DeleteDomain(int domainId)

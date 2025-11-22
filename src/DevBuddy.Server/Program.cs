@@ -67,8 +67,7 @@ builder.Services.AddScoped<IGitRepositoryService, GitRepositoryService>();
 // Add File Explorer Service
 builder.Services.AddScoped<IFileExplorerService, FileExplorerService>();
 
-// Add Context Graph services
-builder.Services.AddSingleton<IContextGraphService, ContextGraphService>();
+// Add Context Graph services (using DuckDB)
 builder.Services.AddScoped<IDomainService, DomainService>();
 builder.Services.AddScoped<IGraphNodeService, GraphNodeService>();
 
@@ -94,13 +93,9 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<DevBuddyDbContext>();
     dbContext.Database.EnsureCreated();
     
-    // Seed default context graph data
+    // Seed default context graph data in DuckDB
     var domainService = scope.ServiceProvider.GetRequiredService<IDomainService>();
     await domainService.SeedDefaultDataAsync();
-    
-    // Initialize DuckDB context graph
-    var contextGraphService = scope.ServiceProvider.GetRequiredService<IContextGraphService>();
-    await contextGraphService.InitializeAsync();
 }
 
 // Add API key authentication middleware (must be before MapMcp)
