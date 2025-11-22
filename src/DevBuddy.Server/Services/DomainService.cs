@@ -11,7 +11,9 @@ public interface IDomainService
     Task<Domain> UpdateDomainAsync(Domain domain);
     Task DeleteDomainAsync(int id);
     Task<List<NodeType>> GetNodeTypesForDomainAsync(int domainId);
+    Task<List<NodeType>> GetAllNodeTypesAsync();
     Task<NodeType> CreateNodeTypeAsync(NodeType nodeType);
+    Task<NodeType> UpdateNodeTypeAsync(NodeType nodeType);
     Task DeleteNodeTypeAsync(int id);
     Task SeedDefaultDataAsync();
 }
@@ -168,6 +170,32 @@ public class DomainService : IDomainService
         return nodeTypes;
     }
 
+    public async Task<List<NodeType>> GetAllNodeTypesAsync()
+    {
+        var nodeTypes = new List<NodeType>();
+        
+        using var connection = new DuckDBConnection($"DataSource={_duckDbPath}");
+        await connection.OpenAsync();
+        
+        using var cmd = connection.CreateCommand();
+        // No parameters needed for this query - fetching all node types
+        cmd.CommandText = "SELECT Id, DomainId, Name, Description FROM NodeTypes ORDER BY DomainId, Name";
+        
+        using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            nodeTypes.Add(new NodeType
+            {
+                Id = reader.GetInt32(0),
+                DomainId = reader.GetInt32(1),
+                Name = reader.GetString(2),
+                Description = reader.IsDBNull(3) ? null : reader.GetString(3)
+            });
+        }
+        
+        return nodeTypes;
+    }
+
     public async Task<NodeType> CreateNodeTypeAsync(NodeType nodeType)
     {
         using var connection = new DuckDBConnection($"DataSource={_duckDbPath}");
@@ -184,6 +212,26 @@ public class DomainService : IDomainService
         
         var id = await cmd.ExecuteScalarAsync();
         nodeType.Id = Convert.ToInt32(id);
+        
+        return nodeType;
+    }
+
+    public async Task<NodeType> UpdateNodeTypeAsync(NodeType nodeType)
+    {
+        using var connection = new DuckDBConnection($"DataSource={_duckDbPath}");
+        await connection.OpenAsync();
+        
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            UPDATE NodeTypes 
+            SET DomainId = $domainId, Name = $name, Description = $description 
+            WHERE Id = $id";
+        cmd.Parameters.Add(new DuckDBParameter("id", nodeType.Id));
+        cmd.Parameters.Add(new DuckDBParameter("domainId", nodeType.DomainId));
+        cmd.Parameters.Add(new DuckDBParameter("name", nodeType.Name));
+        cmd.Parameters.Add(new DuckDBParameter("description", (object?)nodeType.Description ?? DBNull.Value));
+        
+        await cmd.ExecuteNonQueryAsync();
         
         return nodeType;
     }

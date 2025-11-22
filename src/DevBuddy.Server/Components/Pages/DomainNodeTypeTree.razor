@@ -1,0 +1,128 @@
+@using DevBuddy.Server.Data.Models
+
+<div class="domain-node-container mb-3">
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="flex-grow-1" style="cursor: pointer;" @onclick="ToggleExpanded">
+                    @if (HasChildrenOrNodeTypes())
+                    {
+                        <i class="bi @(isExpanded ? "bi-chevron-down" : "bi-chevron-right") me-2"></i>
+                    }
+                    else
+                    {
+                        <i class="bi bi-folder me-2"></i>
+                    }
+                    <strong>@Domain.Name</strong>
+                    @if (!string.IsNullOrEmpty(Domain.Description))
+                    {
+                        <span class="text-muted small ms-2">- @Domain.Description</span>
+                    }
+                    <span class="badge bg-secondary ms-2">@GetNodeTypeCount() node types</span>
+                </div>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-sm btn-outline-success" @onclick:stopPropagation="true" @onclick="() => OnNodeTypeAdd.InvokeAsync(Domain.Id)" title="Add Node Type">
+                        <i class="bi bi-plus-circle"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary" @onclick:stopPropagation="true" @onclick="() => OnDomainEdit.InvokeAsync(Domain)" title="Edit Domain">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" @onclick:stopPropagation="true" @onclick="() => OnDomainDelete.InvokeAsync(Domain.Id)" title="Delete Domain">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        @if (isExpanded)
+        {
+            <div class="card-body">
+                @* Display node types for this domain *@
+                @if (GetNodeTypesForDomain().Any())
+                {
+                    <div class="node-types-list ms-3 mb-3">
+                        <h6 class="text-muted small mb-2">Node Types:</h6>
+                        <div class="list-group list-group-flush">
+                            @foreach (var nodeType in GetNodeTypesForDomain())
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i class="bi bi-diagram-3 me-2 text-primary"></i>
+                                            <strong>@nodeType.Name</strong>
+                                            @if (!string.IsNullOrEmpty(nodeType.Description))
+                                            {
+                                                <p class="mb-0 text-muted small ms-4">@nodeType.Description</p>
+                                            }
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => OnNodeTypeDelete.InvokeAsync(nodeType.Id)" title="Delete Node Type">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted small ms-3 mb-3">No node types defined</p>
+                }
+
+                @* Display child domains *@
+                @if (GetChildDomains().Any())
+                {
+                    <div class="child-domains ms-3">
+                        @foreach (var child in GetChildDomains())
+                        {
+                            <DomainNodeTypeTree Domain="child" 
+                                              AllDomains="AllDomains"
+                                              AllNodeTypes="AllNodeTypes"
+                                              OnDomainEdit="OnDomainEdit"
+                                              OnDomainDelete="OnDomainDelete"
+                                              OnNodeTypeAdd="OnNodeTypeAdd"
+                                              OnNodeTypeDelete="OnNodeTypeDelete" />
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public Domain Domain { get; set; } = null!;
+    [Parameter] public List<Domain> AllDomains { get; set; } = null!;
+    [Parameter] public List<NodeType>? AllNodeTypes { get; set; }
+    [Parameter] public EventCallback<Domain> OnDomainEdit { get; set; }
+    [Parameter] public EventCallback<int> OnDomainDelete { get; set; }
+    [Parameter] public EventCallback<int> OnNodeTypeAdd { get; set; }
+    [Parameter] public EventCallback<int> OnNodeTypeDelete { get; set; }
+
+    private bool isExpanded = false;
+
+    private bool HasChildrenOrNodeTypes()
+    {
+        return GetChildDomains().Any() || GetNodeTypesForDomain().Any();
+    }
+
+    private IEnumerable<Domain> GetChildDomains()
+    {
+        return AllDomains?.Where(d => d.ParentDomainId == Domain.Id) ?? Enumerable.Empty<Domain>();
+    }
+
+    private IEnumerable<NodeType> GetNodeTypesForDomain()
+    {
+        return AllNodeTypes?.Where(nt => nt.DomainId == Domain.Id) ?? Enumerable.Empty<NodeType>();
+    }
+
+    private int GetNodeTypeCount()
+    {
+        return GetNodeTypesForDomain().Count();
+    }
+
+    private void ToggleExpanded()
+    {
+        isExpanded = !isExpanded;
+    }
+}
