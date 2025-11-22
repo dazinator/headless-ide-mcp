@@ -1,30 +1,25 @@
-using DevBuddy.Server.Data;
 using DevBuddy.Server.Data.Models;
 using DevBuddy.Server.Services;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
+using DuckDB.NET.Data;
 
 namespace DevBuddy.IntegrationTests;
 
 public class ContextGraphTests : IDisposable
 {
-    private readonly DevBuddyDbContext _context;
+    private readonly string _testDbPath;
     private readonly DomainService _domainService;
     private readonly GraphNodeService _graphNodeService;
 
     public ContextGraphTests()
     {
-        var options = new DbContextOptionsBuilder<DevBuddyDbContext>()
-            .UseSqlite("DataSource=:memory:")
-            .Options;
+        // Use a unique temporary database for each test
+        _testDbPath = Path.Combine(Path.GetTempPath(), $"test_contextgraph_{Guid.NewGuid()}.duckdb");
+        Environment.SetEnvironmentVariable("DUCKDB_PATH", _testDbPath);
 
-        _context = new DevBuddyDbContext(options);
-        _context.Database.OpenConnection();
-        _context.Database.EnsureCreated();
-
-        _domainService = new DomainService(_context, NullLogger<DomainService>.Instance);
-        _graphNodeService = new GraphNodeService(_context, NullLogger<GraphNodeService>.Instance);
+        _domainService = new DomainService(NullLogger<DomainService>.Instance);
+        _graphNodeService = new GraphNodeService(NullLogger<GraphNodeService>.Instance);
     }
 
     [Fact]
@@ -34,26 +29,49 @@ public class ContextGraphTests : IDisposable
         await _domainService.SeedDefaultDataAsync();
 
         // Assert
-        var generalDomain = await _context.Domains.FirstOrDefaultAsync(d => d.Name == "General");
-        Assert.NotNull(generalDomain);
-        Assert.Equal("Default domain for general purpose nodes", generalDomain.Description);
+        using var connection = new DuckDBConnection($"DataSource={_testDbPath}");
+        await connection.OpenAsync();
+        
+        // Check domain
+        using var domainCmd = connection.CreateCommand();
+        domainCmd.CommandText = "SELECT Name, Description FROM Domains WHERE Name = 'General'";
+        using var domainReader = await domainCmd.ExecuteReaderAsync();
+        Assert.True(await domainReader.ReadAsync());
+        Assert.Equal("General", domainReader.GetString(0));
+        Assert.Equal("Default domain for general purpose nodes", domainReader.GetString(1));
 
-        var nodeTypes = await _context.NodeTypes.Where(nt => nt.DomainId == generalDomain.Id).ToListAsync();
-        Assert.NotEmpty(nodeTypes);
-        Assert.Contains(nodeTypes, nt => nt.Name == "Project");
-        Assert.Contains(nodeTypes, nt => nt.Name == "Goal");
-        Assert.Contains(nodeTypes, nt => nt.Name == "Idea");
+        // Check node types
+        using var nodeTypeCmd = connection.CreateCommand();
+        nodeTypeCmd.CommandText = "SELECT Name FROM NodeTypes";
+        var nodeTypes = new List<string>();
+        using var nodeTypeReader = await nodeTypeCmd.ExecuteReaderAsync();
+        while (await nodeTypeReader.ReadAsync())
+        {
+            nodeTypes.Add(nodeTypeReader.GetString(0));
+        }
+        Assert.Contains("Project", nodeTypes);
+        Assert.Contains("Goal", nodeTypes);
+        Assert.Contains("Idea", nodeTypes);
 
-        var edgeTypes = await _context.EdgeTypes.ToListAsync();
-        Assert.NotEmpty(edgeTypes);
-        Assert.Contains(edgeTypes, et => et.Name == "relates_to");
-        Assert.Contains(edgeTypes, et => et.Name == "depends_on");
+        // Check edge types
+        using var edgeTypeCmd = connection.CreateCommand();
+        edgeTypeCmd.CommandText = "SELECT Name FROM EdgeTypes";
+        var edgeTypes = new List<string>();
+        using var edgeTypeReader = await edgeTypeCmd.ExecuteReaderAsync();
+        while (await edgeTypeReader.ReadAsync())
+        {
+            edgeTypes.Add(edgeTypeReader.GetString(0));
+        }
+        Assert.Contains("relates_to", edgeTypes);
+        Assert.Contains("depends_on", edgeTypes);
     }
 
     [Fact]
     public async Task CreateDomain_WithParent_CreatesHierarchy()
     {
         // Arrange
+        await _domainService.SeedDefaultDataAsync();
+        
         var parentDomain = new Domain
         {
             Name = "Technology",
@@ -82,8 +100,10 @@ public class ContextGraphTests : IDisposable
     {
         // Arrange
         await _domainService.SeedDefaultDataAsync();
-        var generalDomain = await _context.Domains.FirstAsync(d => d.Name == "General");
-        var projectNodeType = await _context.NodeTypes.FirstAsync(nt => nt.Name == "Project");
+        var domains = await _domainService.GetAllDomainsAsync();
+        var generalDomain = domains.First(d => d.Name == "General");
+        var nodeTypes = await _domainService.GetNodeTypesForDomainAsync(generalDomain.Id);
+        var projectNodeType = nodeTypes.First(nt => nt.Name == "Project");
 
         var node = new Node
         {
@@ -110,8 +130,10 @@ public class ContextGraphTests : IDisposable
     {
         // Arrange
         await _domainService.SeedDefaultDataAsync();
-        var generalDomain = await _context.Domains.FirstAsync(d => d.Name == "General");
-        var ideaNodeType = await _context.NodeTypes.FirstAsync(nt => nt.Name == "Idea");
+        var domains = await _domainService.GetAllDomainsAsync();
+        var generalDomain = domains.First(d => d.Name == "General");
+        var nodeTypes = await _domainService.GetNodeTypesForDomainAsync(generalDomain.Id);
+        var ideaNodeType = nodeTypes.First(nt => nt.Name == "Idea");
 
         var node = new Node
         {
@@ -139,10 +161,13 @@ public class ContextGraphTests : IDisposable
     {
         // Arrange
         await _domainService.SeedDefaultDataAsync();
-        var generalDomain = await _context.Domains.FirstAsync(d => d.Name == "General");
-        var projectNodeType = await _context.NodeTypes.FirstAsync(nt => nt.Name == "Project");
-        var goalNodeType = await _context.NodeTypes.FirstAsync(nt => nt.Name == "Goal");
-        var relatesTo = await _context.EdgeTypes.FirstAsync(et => et.Name == "relates_to");
+        var domains = await _domainService.GetAllDomainsAsync();
+        var generalDomain = domains.First(d => d.Name == "General");
+        var nodeTypes = await _domainService.GetNodeTypesForDomainAsync(generalDomain.Id);
+        var projectNodeType = nodeTypes.First(nt => nt.Name == "Project");
+        var goalNodeType = nodeTypes.First(nt => nt.Name == "Goal");
+        var edgeTypes = await _graphNodeService.GetEdgeTypesAsync();
+        var relatesTo = edgeTypes.First(et => et.Name == "relates_to");
 
         var project = await _graphNodeService.CreateNodeAsync(new Node
         {
@@ -178,7 +203,19 @@ public class ContextGraphTests : IDisposable
 
     public void Dispose()
     {
-        _context.Database.CloseConnection();
-        _context.Dispose();
+        // Clean up test database
+        try
+        {
+            if (File.Exists(_testDbPath))
+                File.Delete(_testDbPath);
+            if (File.Exists(_testDbPath + ".wal"))
+                File.Delete(_testDbPath + ".wal");
+        }
+        catch
+        {
+            // Ignore cleanup errors
+        }
+        
+        Environment.SetEnvironmentVariable("DUCKDB_PATH", null);
     }
 }
